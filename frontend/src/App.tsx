@@ -198,11 +198,10 @@ function Auth({ onLogin, onBack }: { onLogin: (u: User) => void; onBack?: () => 
             <input
               name="username"
               required
-              minLength={3}
-              maxLength={64}
-              pattern="[a-zA-Z0-9_.-]+"
+              minLength={1}
+              maxLength={128}
               autoComplete="username"
-              placeholder="Your username"
+              placeholder="Your username or email"
             />
           </label>
           <label>
@@ -211,10 +210,10 @@ function Auth({ onLogin, onBack }: { onLogin: (u: User) => void; onBack?: () => 
               name="password"
               type="password"
               required
-              minLength={12}
+              minLength={1}
               maxLength={128}
               autoComplete={register ? "new-password" : "current-password"}
-              placeholder="At least 12 characters"
+              placeholder="Enter your password"
             />
           </label>
           {error && (
