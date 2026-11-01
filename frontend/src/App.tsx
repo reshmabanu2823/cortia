@@ -395,11 +395,6 @@ function Workspace({
         >
           <X size={20} />
         </button>
-        <div className="workspace-label">
-          <span className="workspace-dot" />
-          Personal workspace
-          <ChevronRight size={14} />
-        </div>
         <span className="nav-label">MONITOR & UNDERSTAND</span>
         <nav>
           {nav.slice(0, 4).map(({ name, icon: Icon }) => (
