@@ -1,7 +1,6 @@
 import { LandingPage } from "./pages/Landing";
 import { DeviceSetup, RecordingControls } from "./pages/Acquisition";
 import {
-  SessionRows,
   BaselineComparison,
   SessionEvidence,
 } from "./pages/SessionViews";
@@ -9,6 +8,7 @@ import { BaselinesPage } from "./pages/Baselines";
 import { MRIPage } from "./pages/MRI";
 import { HistoryPage } from "./pages/History";
 import { InsightsPage } from "./pages/Insights";
+import { OverviewPage } from "./pages/Overview";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
@@ -18,7 +18,6 @@ import {
   Brain,
   Check,
   ChevronRight,
-  Circle,
   CircleHelp,
   Clock3,
   Fingerprint,
@@ -44,10 +43,8 @@ import {
   Brand,
   Card,
   Empty,
-  LinkButton,
   Note,
   SignalEmpty,
-  Stat,
 } from "./ui";
 
 type Page =
@@ -553,200 +550,16 @@ function Workspace({
           ) : (
             <>
               {page === "Overview" && (
-                <>
-                  <section className="intro-banner">
-                    <div>
-                      <span className="eyebrow light">KNOW YOUR NORMAL</span>
-                      <h2>Every brain has its own rhythm.</h2>
-                      <p>
-                        Start with a recording. Build a baseline.
-                        <br />
-                        Discover how your signal changes over time.
-                      </p>
-                      <button onClick={() => navigate("Live EEG")}>
-                        Start monitoring <ArrowRight size={15} />
-                      </button>
-                    </div>
-                    <div className="intro-art" aria-hidden="true">
-                      <Brain size={155} strokeWidth={0.65} />
-                      <span className="art-ring" />
-                      <span className="intro-coordinate">
-                        01 / YOUR PERSONAL SIGNAL
-                      </span>
-                    </div>
-                  </section>
-                  <div className="stats-grid">
-                    <Stat
-                      label="EEG connection"
-                      value={
-                        liveAvailable
-                          ? "Streaming"
-                          : live.state === "busy"
-                            ? "Device in use"
-                            : "Disconnected"
-                      }
-                      detail={
-                        liveAvailable
-                          ? `${live.config?.sampling_hz} Hz · channel ${Number(live.config?.channel) + 1}`
-                          : "Connect hardware to receive EEG"
-                      }
-                      icon={<Radio size={17} />}
-                    />
-                    <Stat
-                      label="Signal quality"
-                      value={
-                        liveAvailable && live.latest
-                          ? live.latest.quality.usable
-                            ? "Usable"
-                            : "Review signal"
-                          : "Awaiting signal"
-                      }
-                      detail="Exploratory artifact checks"
-                      icon={<Activity size={17} />}
-                    />
-                    <Stat
-                      label="Recorded sessions"
-                      value={String(sessions.length)}
-                      detail={
-                        last
-                          ? `Latest ${date(last.started_at)}`
-                          : "Your first recording starts here"
-                      }
-                      icon={<HistoryIcon size={17} />}
-                    />
-                    <Stat
-                      label="Personal baseline"
-                      value={
-                        baselines.length ? "Established" : "Not established"
-                      }
-                      detail={
-                        baselines.length
-                          ? `${baselines[0].session_ids.length} independent sessions`
-                          : "Requires 3 comparable sessions"
-                      }
-                      icon={<Fingerprint size={17} />}
-                    />
-                  </div>
-                  <div className="overview-grid">
-                    <Card
-                      title="Live EEG signal"
-                      subtitle="One channel · raw acquisition"
-                      action={
-                        <Badge tone={liveAvailable ? "green" : "neutral"}>
-                          {liveAvailable ? "Receiving" : "Offline"}
-                        </Badge>
-                      }
-                    >
-                      {liveAvailable && points.length ? (
-                        <Waveform points={points} />
-                      ) : (
-                        <SignalEmpty />
-                      )}
-                      <div className="card-footer">
-                        <span>
-                          <Circle size={9} />{" "}
-                          {liveAvailable
-                            ? "Measured ADC counts"
-                            : "Hardware connection required"}
-                        </span>
-                        <LinkButton onClick={() => navigate("Live EEG")}>
-                          Open monitor
-                        </LinkButton>
-                      </div>
-                    </Card>
-                    <Card
-                      title="Your monitoring journey"
-                      subtitle="A foundation built on real recordings"
-                    >
-                      <div className="steps">
-                        {[
-                          {
-                            n: "01",
-                            title: "Connect your device",
-                            text: "Arduino UNO R4 + BioAmp EXG Pill",
-                            done: liveAvailable,
-                          },
-                          {
-                            n: "02",
-                            title: "Record with context",
-                            text: "Keep electrode placement and task consistent",
-                            done: sessions.some((s) => s.valid_windows > 0),
-                          },
-                          {
-                            n: "03",
-                            title: "Build your baseline",
-                            text: "Three valid, comparable sessions",
-                            done: baselines.length > 0,
-                          },
-                        ].map((step) => (
-                          <div className="step" key={step.n}>
-                            <span className={step.done ? "done" : ""}>
-                              {step.done ? <Check size={16} /> : step.n}
-                            </span>
-                            <div>
-                              <strong>{step.title}</strong>
-                              <p>{step.text}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <Note>
-                        Your baseline comes from your recordings. Never from
-                        population averages or generated values.
-                      </Note>
-                    </Card>
-                  </div>
-                  <div className="two-column">
-                    <Card
-                      title="Recent recordings"
-                      action={
-                        <LinkButton
-                          onClick={() => navigate("History & reports")}
-                        >
-                          View history
-                        </LinkButton>
-                      }
-                    >
-                      {sessions.length ? (
-                        <SessionRows
-                          sessions={sessions.slice(0, 3)}
-                          choose={choose}
-                        />
-                      ) : (
-                        <Empty
-                          title="Your record starts here"
-                          text="Completed recordings and their measured features appear here."
-                        />
-                      )}
-                    </Card>
-                    <Card
-                      title="MRI image analysis"
-                      subtitle="Independent from your EEG measurements"
-                      action={<ScanLine size={20} className="muted" />}
-                    >
-                      <div className="mri-overview">
-                        <span className="mri-mini">
-                          <ScanLine size={34} />
-                        </span>
-                        <div>
-                          <h3>A separate view of your scan.</h3>
-                          <p>
-                            Upload an MRI image for the existing four-class
-                            research model. Review its output and limitations.
-                          </p>
-                          <LinkButton onClick={() => navigate("MRI Analysis")}>
-                            Explore MRI analysis
-                          </LinkButton>
-                        </div>
-                      </div>
-                    </Card>
-                  </div>
-                  <Note>
-                    For research and personal monitoring. CORTIA does not
-                    diagnose conditions or measure intelligence, attention,
-                    anxiety, or depression.
-                  </Note>
-                </>
+                <OverviewPage
+                  liveAvailable={liveAvailable}
+                  live={live}
+                  points={points}
+                  sessions={sessions}
+                  baselines={baselines}
+                  last={last}
+                  navigate={navigate}
+                  choose={choose}
+                />
               )}
               {page === "Live EEG" && (
                 <>
