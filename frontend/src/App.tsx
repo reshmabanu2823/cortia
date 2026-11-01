@@ -27,7 +27,6 @@ import {
   Loader2,
   LogOut,
   Menu,
-  Plus,
   Radio,
   ScanLine,
   ShieldCheck,
@@ -485,43 +484,34 @@ function Workspace({
           </div>
         </header>
         <main className="content">
-          <div className="page-heading">
-            <div>
-              <span className="eyebrow">
-                CORTIA /{" "}
-                {page === "Overview"
-                  ? "PERSONAL MONITORING"
-                  : page.toUpperCase()}
-              </span>
-              <h1>
-                {page === "Overview" ? "Your brain, in perspective." : page}
-              </h1>
-              <p>{descriptions[page]}</p>
+          {page !== "Overview" && (
+            <div className="page-heading">
+              <div>
+                <span className="eyebrow">
+                  CORTIA / {page.toUpperCase()}
+                </span>
+                <h1>{page}</h1>
+                <p>{descriptions[page]}</p>
+              </div>
+              {page === "Brainwaves" && (
+                <select
+                  aria-label="Analysis source"
+                  value={selected?.id || ""}
+                  onChange={(e) => {
+                    if (e.target.value) void choose(e.target.value);
+                    else setSelected(null);
+                  }}
+                >
+                  <option value="">Live analysis</option>
+                  {sessions.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {date(s.started_at)} · {s.context.task}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
-            {page === "Overview" && (
-              <button className="primary" onClick={() => navigate("Live EEG")}>
-                <Plus size={17} />
-                New recording
-              </button>
-            )}
-            {page === "Brainwaves" && (
-              <select
-                aria-label="Analysis source"
-                value={selected?.id || ""}
-                onChange={(e) => {
-                  if (e.target.value) void choose(e.target.value);
-                  else setSelected(null);
-                }}
-              >
-                <option value="">Live analysis</option>
-                {sessions.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {date(s.started_at)} · {s.context.task}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
+          )}
           {error && (
             <div className="error error-banner" role="alert">
               {error}

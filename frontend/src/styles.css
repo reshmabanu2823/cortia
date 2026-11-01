@@ -4731,3 +4731,750 @@ td small {
 .intro-banner-logo:hover {
   transform: scale(1.05);
 }
+
+/* ==========================================================================
+   REFERENCE OVERVIEW REDESIGN (CLEAN PROFESSIONAL HEALTH MONITORING)
+   ========================================================================== */
+
+.ref-overview-root {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1260px;
+  margin: 0 auto;
+}
+
+/* 1. Hero Section */
+.ref-hero-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  padding: 8px 0 20px;
+  min-height: 175px;
+}
+
+.ref-hero-left {
+  flex: 1;
+  max-width: 480px;
+}
+
+.ref-hero-eyebrow {
+  font-family: var(--mono, monospace);
+  font-size: 11px;
+  letter-spacing: 2.2px;
+  color: #8C827A;
+  text-transform: uppercase;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.ref-hero-title {
+  font-family: var(--serif, serif);
+  font-size: 44px;
+  line-height: 1.15;
+  color: #24201D;
+  letter-spacing: -0.5px;
+  margin: 0 0 10px;
+  font-weight: 700;
+}
+
+.wine-text {
+  color: #9E2A4B;
+}
+
+.ref-hero-sub {
+  font-size: 15px;
+  color: #6E665F;
+  margin: 0;
+  font-weight: 400;
+}
+
+.ref-hero-center-art {
+  position: relative;
+  width: 230px;
+  height: 180px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ref-hero-floating-brain {
+  width: 170px;
+  height: 170px;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 28px rgba(226, 103, 127, 0.28));
+  animation: floatBrain 6s ease-in-out infinite alternate;
+  z-index: 2;
+}
+
+@keyframes floatBrain {
+  0% { transform: translateY(0px) rotate(0deg); }
+  100% { transform: translateY(-8px) rotate(1.5deg); }
+}
+
+.art-orbit-ring {
+  position: absolute;
+  width: 215px;
+  height: 115px;
+  border: 1.5px solid rgba(226, 103, 127, 0.35);
+  border-radius: 50%;
+  transform: rotate(-18deg);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.ref-hero-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  align-self: flex-start;
+}
+
+.ref-bell-btn {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid #ECE7DE;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6B655F;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.ref-bell-btn:hover {
+  background: #FAF8F5;
+  color: #24201D;
+  border-color: #DBD4C8;
+}
+
+.bell-dot {
+  position: absolute;
+  top: 11px;
+  right: 11px;
+  width: 6px;
+  height: 6px;
+  background: #9E2A4B;
+  border-radius: 50%;
+}
+
+.ref-new-recording-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #9E2A4B;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 24px;
+  padding: 11px 22px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(158, 42, 75, 0.25);
+  transition: all 0.15s ease;
+}
+
+.ref-new-recording-btn:hover {
+  background: #84203C;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(158, 42, 75, 0.35);
+}
+
+/* 2. Four Status Metric Pills */
+.ref-metrics-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .ref-metrics-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.ref-metric-card {
+  background: #FFFFFF;
+  border: 1px solid #F0ECE4;
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+  transition: all 0.15s ease;
+}
+
+.ref-metric-card.clickable {
+  cursor: pointer;
+}
+
+.ref-metric-card.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  border-color: #E2DCD4;
+}
+
+.ref-metric-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ref-metric-icon-wrap.mint { background: #EAF7EE; color: #16A34A; }
+.ref-metric-icon-wrap.mauve { background: #F7EBF0; color: #9E2A4B; }
+.ref-metric-icon-wrap.amber { background: #FEF3EB; color: #D97706; }
+.ref-metric-icon-wrap.blush { background: #FDF0F0; color: #C94040; }
+
+.ref-metric-label {
+  font-size: 11.5px;
+  color: #78716C;
+  display: block;
+  margin-bottom: 2px;
+  font-weight: 500;
+}
+
+.ref-metric-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: #24201D;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ref-metric-num {
+  font-size: 20px;
+  font-weight: 700;
+  color: #24201D;
+}
+
+.ref-metric-date {
+  font-size: 15px;
+  font-weight: 700;
+  color: #24201D;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.status-dot.ready { background: #16A34A; }
+.status-dot.live {
+  background: #16A34A;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.25);
+}
+
+/* 3. Middle Row: Live EEG & MRI */
+.ref-two-col-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .ref-two-col-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ref-card {
+  background: #FFFFFF;
+  border: 1px solid #EFEAE2;
+  border-radius: 18px;
+  padding: 22px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+}
+
+.ref-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.ref-card-header h3 {
+  font-size: 17px;
+  font-weight: 700;
+  color: #24201D;
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+.ref-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ref-pill-badge.green {
+  background: #EAF8EE;
+  color: #16A34A;
+  border: 1px solid #D1F2D9;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pulse-mini {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #16A34A;
+}
+
+.ref-timer-badge {
+  font-family: var(--mono, monospace);
+  font-size: 12px;
+  font-weight: 600;
+  color: #57524E;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timer-rec-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #EF4444;
+}
+
+.ref-eeg-waveform-container {
+  height: 120px;
+  background: #FAF9F7;
+  border: 1px solid #EFEBE4;
+  border-radius: 12px;
+  padding: 10px 14px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ref-live-wave-mock {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.ref-eeg-svg {
+  width: 100%;
+  height: 90px;
+  display: block;
+}
+
+.ref-waiting-text {
+  position: absolute;
+  bottom: 6px;
+  left: 10px;
+  font-size: 10.5px;
+  color: #8C847B;
+  font-weight: 500;
+  font-family: var(--mono, monospace);
+}
+
+.ref-eeg-bands-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #F3EFE9;
+}
+
+.band-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #24201D;
+}
+
+.greek-alpha { color: #E26D7D; font-weight: 700; font-size: 16px; font-family: var(--serif, serif); }
+.greek-beta  { color: #5A9BE6; font-weight: 700; font-size: 16px; font-family: var(--serif, serif); }
+.greek-theta { color: #9B6EE6; font-weight: 700; font-size: 16px; font-family: var(--serif, serif); }
+.greek-delta { color: #48BB78; font-weight: 700; font-size: 16px; font-family: var(--serif, serif); }
+
+.stat-divider {
+  width: 1px;
+  height: 18px;
+  background: #E5DFD7;
+}
+
+/* MRI Analysis Right Card */
+.ref-mri-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+}
+
+.ref-mri-thumb-box {
+  width: 130px;
+  height: 130px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+  background: #000;
+}
+
+.ref-mri-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.ref-mri-info-pane {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.ref-mri-scan-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #24201D;
+  margin: 6px 0 0;
+}
+
+.ref-mri-scan-sub {
+  font-size: 13px;
+  color: #78716C;
+  margin-bottom: 12px;
+}
+
+.ref-outline-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: #9E2A4B;
+  border: 1.5px solid #D8B2BC;
+  border-radius: 20px;
+  padding: 7px 18px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ref-outline-btn:hover {
+  background: #FDF2F4;
+  border-color: #9E2A4B;
+}
+
+/* 4. Third Row: Brainwaves & Mental State */
+.ref-brainwave-body {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex: 1;
+}
+
+.ref-donut-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+
+.ref-donut-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ref-donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ref-donut-center strong {
+  font-size: 20px;
+  font-weight: 700;
+  color: #24201D;
+  line-height: 1;
+}
+
+.ref-donut-center span {
+  font-size: 11px;
+  color: #78716C;
+  margin-top: 2px;
+}
+
+.ref-bands-progress-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ref-progress-row {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.ref-prog-label {
+  font-size: 12px;
+  color: #44403C;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.color-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.color-dot.coral { background: #E26D7D; }
+.color-dot.blue { background: #5A9BE6; }
+.color-dot.purple { background: #9B6EE6; }
+.color-dot.mint { background: #48BB78; }
+
+.ref-prog-track {
+  height: 8px;
+  background: #F2EDE6;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.ref-prog-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.ref-prog-fill.coral { background: #E26D7D; }
+.ref-prog-fill.blue { background: #5A9BE6; }
+.ref-prog-fill.purple { background: #9B6EE6; }
+.ref-prog-fill.mint { background: #48BB78; }
+
+/* Mental State */
+.ref-mental-state-banner {
+  flex: 1;
+  background: linear-gradient(135deg, #F0FBF4 0%, #E2F6EA 100%);
+  border: 1px solid #C8EED7;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 30px;
+}
+
+.ref-lotus-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #D1F2DE;
+  color: #15803D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-lotus {
+  color: #15803D;
+}
+
+.ref-mental-state-text {
+  font-size: 22px;
+  font-weight: 700;
+  color: #166534;
+  font-family: var(--serif, serif);
+}
+
+/* 5. Quick Tools Section */
+.ref-quick-tools-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.ref-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #24201D;
+  margin: 0;
+}
+
+.ref-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 800px) {
+  .ref-tools-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.ref-tool-card {
+  background: #FFFFFF;
+  border: 1px solid #ECE7DE;
+  border-radius: 14px;
+  padding: 22px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ref-tool-card:hover {
+  transform: translateY(-2px);
+  border-color: #D8B2BC;
+  box-shadow: 0 6px 16px rgba(158, 42, 75, 0.08);
+}
+
+.ref-tool-icon {
+  color: #9E2A4B;
+}
+
+.ref-tool-card span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #24201D;
+}
+
+/* 6. Your Monitoring Journey Card */
+.ref-journey-card {
+  background: #FFFFFF;
+  border: 1px solid #ECE7DE;
+  border-radius: 16px;
+  padding: 20px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+}
+
+@media (max-width: 900px) {
+  .ref-journey-card {
+    flex-direction: column;
+    gap: 18px;
+    align-items: flex-start;
+  }
+}
+
+.ref-journey-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ref-journey-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #FCEEF1;
+  color: #9E2A4B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ref-journey-info h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #24201D;
+  margin: 0 0 2px;
+}
+
+.ref-journey-info p {
+  font-size: 12.5px;
+  color: #78716C;
+  margin: 0;
+}
+
+.ref-journey-stepper {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  position: relative;
+}
+
+.ref-stepper-line {
+  position: absolute;
+  top: 12px;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: #E5DFD7;
+  z-index: 1;
+}
+
+.ref-step-node {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.node-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 2px solid #D5CECE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ref-step-node.completed .node-circle {
+  background: #9E2A4B;
+  border-color: #9E2A4B;
+  color: #FFFFFF;
+}
+
+.ref-step-node span {
+  font-size: 11px;
+  font-weight: 600;
+  color: #78716C;
+}
+
+.ref-step-node.completed span {
+  color: #24201D;
+  font-weight: 700;
+}
