@@ -104,7 +104,7 @@ export function OverviewPage({
       {/* 1. TOP HERO BANNER */}
       <section className="intro-banner compact-banner">
         <div>
-          <span className="eyebrow light">UNIFIED NEUROTECHNOLOGY WORKSTATION</span>
+          <span className="eyebrow red">UNIFIED NEUROTECHNOLOGY WORKSTATION</span>
           <h2>Your brain, in perspective.</h2>
           <p>
             Real-time EEG biopotentials, brainwave decomposition, and deep learning MRI tumor classification with AI assistance.
@@ -120,9 +120,9 @@ export function OverviewPage({
         </div>
         <div className="intro-art" aria-hidden="true">
           <img
-            alt="CORTIA"
-            className="brand-brain-img banner-logo-highlight"
             src="/cortia/cortia-brain.webp"
+            alt="CORTIA Brain Logo"
+            className="intro-banner-logo"
           />
           <span className="art-ring" />
         </div>
