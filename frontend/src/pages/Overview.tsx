@@ -119,7 +119,11 @@ export function OverviewPage({
           </div>
         </div>
         <div className="intro-art" aria-hidden="true">
-          <Brain size={140} strokeWidth={0.65} />
+          <img
+            src="/cortia/cortia-brain.webp"
+            alt="CORTIA Brain Logo"
+            className="intro-banner-logo"
+          />
           <span className="art-ring" />
         </div>
       </section>

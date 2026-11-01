@@ -4674,3 +4674,17 @@ td small {
 .spotlight-points strong {
   color: #1A1715;
 }
+
+/* Hero Banner CORTIA Logo */
+.intro-banner-logo {
+  width: 145px;
+  height: 145px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.45));
+  z-index: 1;
+  transition: transform 0.3s ease;
+}
+
+.intro-banner-logo:hover {
+  transform: scale(1.05);
+}
