@@ -10,13 +10,12 @@ import {
   Layers,
   Radio,
   ScanLine,
-  Sparkles,
   Waves,
   Zap,
-  BarChart3,
   ShieldCheck,
   Cpu,
-  HeartPulse,
+  Grid3X3,
+  SlidersHorizontal,
 } from "lucide-react";
 import type { Recording, Baseline, Live, Point } from "../types";
 import { date } from "../api";
@@ -35,7 +34,7 @@ interface OverviewProps {
   choose: (id: string) => Promise<void>;
 }
 
-type FeatureTab = "all" | "eeg" | "brainwaves" | "baselines" | "mri" | "gradcam" | "ai";
+type FeatureTab = "eeg" | "brainwaves" | "baselines" | "mri" | "gradcam" | "ai";
 
 export function OverviewPage({
   liveAvailable,
@@ -47,23 +46,22 @@ export function OverviewPage({
   navigate,
   choose,
 }: OverviewProps) {
-  const [activeTab, setActiveTab] = useState<FeatureTab>("all");
+  const [viewMode, setViewMode] = useState<"grid" | "spotlight">("grid");
+  const [activeTab, setActiveTab] = useState<FeatureTab>("eeg");
   const [selectedMriClass, setSelectedMriClass] = useState<number>(0);
   const [eegSimState, setEegSimState] = useState<"clean" | "blink" | "alpha">("clean");
 
-  // Simulated EEG demo waveform points for visualization when offline
+  // Simulated EEG demo waveform points for visualization
   const demoPoints = useMemo(() => {
     return Array.from({ length: 64 }, (_, i) => {
       const t = i / 10;
       let y = 0;
       if (eegSimState === "clean") {
-        y = Math.sin(t * 3) * 14 + Math.sin(t * 7) * 8 + (Math.sin(t * 19) * 3);
+        y = Math.sin(t * 3) * 14 + Math.sin(t * 7) * 8 + Math.sin(t * 19) * 3;
       } else if (eegSimState === "blink") {
-        // large deflection spike around middle
         const spike = Math.exp(-Math.pow((i - 32) / 4, 2)) * 65;
         y = Math.sin(t * 2) * 10 + spike;
       } else {
-        // rhythmic alpha burst (8-12 Hz)
         y = Math.sin(t * 10) * 28 + Math.cos(t * 5) * 6;
       }
       return { x: i, y: Math.round(y) };
@@ -73,67 +71,60 @@ export function OverviewPage({
   const mriClasses = [
     {
       name: "Pituitary Tumor",
-      type: "Sellar / Suprasellar Adenoma",
-      desc: "Typically benign neoplasm originating from adenohypophysis at the base of skull, often compressing optic chiasm.",
+      type: "Sellar / Suprasellar",
+      desc: "Benign tumor at skull base near the pituitary gland.",
       confidence: "99.8%",
       color: "#D9534F",
-      badge: "Sellar region",
     },
     {
       name: "Glioma",
-      type: "Intra-axial Glial Malignancy",
-      desc: "Neuroepithelial parenchymal tumor arising from astrocytes or oligodendrocytes (WHO Grade II–IV).",
+      type: "Glial Tissue",
+      desc: "Tumor originating in the supportive tissue of the brain.",
       confidence: "99.2%",
       color: "#D97706",
-      badge: "Intra-axial",
     },
     {
       name: "Meningioma",
-      type: "Extra-axial Dural Tumor",
-      desc: "Arises from arachnoid cap cells of the meninges; typically slow-growing and well-circumscribed.",
+      type: "Dural Membrane",
+      desc: "Slow-growing tumor arising from the membranes around the brain.",
       confidence: "98.9%",
       color: "#2563EB",
-      badge: "Dural-based",
     },
     {
       name: "No Tumor",
-      type: "Normal Brain Parenchyma",
-      desc: "Normal ventricular symmetry, preserved cortical sulcation, and absence of mass effect or pathological enhancement.",
+      type: "Healthy Brain",
+      desc: "Clear brain scan with normal tissue and no abnormal mass.",
       confidence: "99.9%",
       color: "#16A34A",
-      badge: "Healthy scan",
     },
   ];
 
   return (
     <div className="overview-page-root">
       {/* 1. TOP HERO BANNER */}
-      <section className="intro-banner">
+      <section className="intro-banner compact-banner">
         <div>
-          <span className="eyebrow light">CORTIA NEUROTECHNOLOGY WORKSTATION</span>
-          <h2>Every brain has its own rhythm.</h2>
+          <span className="eyebrow light">UNIFIED NEUROTECHNOLOGY WORKSTATION</span>
+          <h2>Your brain, in perspective.</h2>
           <p>
-            An end-to-end clinical and research platform unifying single-channel EEG biopotential telemetry,
-            frequency band neurodynamics, personalized baselines, deep learning MRI tumor classification,
-            and explainable AI with clinical LLM consultation.
+            Real-time EEG biopotentials, brainwave decomposition, and deep learning MRI tumor classification with AI assistance.
           </p>
           <div className="hero-banner-actions">
             <button className="banner-primary-btn" onClick={() => navigate("Live EEG")}>
-              Start Live Recording <ArrowRight size={15} />
+              <Activity size={15} /> Start Recording
             </button>
             <button className="banner-ghost-btn" onClick={() => navigate("MRI Analysis")}>
-              Upload Brain MRI Scan <ScanLine size={15} />
+              <ScanLine size={15} /> Analyze MRI
             </button>
           </div>
         </div>
         <div className="intro-art" aria-hidden="true">
-          <Brain size={160} strokeWidth={0.65} />
+          <Brain size={140} strokeWidth={0.65} />
           <span className="art-ring" />
-          <span className="intro-coordinate">01 / UNIFIED NEURO-AI WORKSTATION</span>
         </div>
       </section>
 
-      {/* 2. REAL-TIME TELEMETRY / STATUS METRICS */}
+      {/* 2. REAL-TIME STATUS METRICS */}
       <div className="stats-grid">
         <Stat
           label="EEG connection"
@@ -146,7 +137,7 @@ export function OverviewPage({
           }
           detail={
             liveAvailable
-              ? `${live.config?.sampling_hz || 250} Hz · Channel ${Number(live.config?.channel || 0) + 1}`
+              ? `${live.config?.sampling_hz || 250} Hz · Channel 1`
               : "Connect hardware to receive EEG"
           }
           icon={<Radio size={17} />}
@@ -160,7 +151,7 @@ export function OverviewPage({
                 : "Review signal"
               : "Awaiting signal"
           }
-          detail="Exploratory artifact checks"
+          detail="Automatic artifact checks"
           icon={<Activity size={17} />}
         />
         <Stat
@@ -178,647 +169,576 @@ export function OverviewPage({
           value={baselines.length ? "Established" : "Not established"}
           detail={
             baselines.length
-              ? `${baselines[0].session_ids.length} independent sessions`
-              : "Requires 3 comparable sessions"
+              ? `${baselines[0].session_ids.length} recordings calibrated`
+              : "Requires 3 clean sessions"
           }
           icon={<Fingerprint size={17} />}
         />
       </div>
 
-      {/* 3. COMPREHENSIVE PROJECT WALKTHROUGH & FEATURE SUITE */}
+      {/* 3. VISUAL FEATURE EXPLORER */}
       <section className="overview-features-showcase">
-        <div className="showcase-header">
-          <div className="showcase-titles">
-            <span className="eyebrow red">CORE CAPABILITIES AT A GLANCE</span>
-            <h2>What CORTIA Does: Interactive Feature Walkthrough</h2>
-            <p>
-              Explore how CORTIA combines hardware signal acquisition, advanced DSP, computer vision,
-              and generative medical intelligence into one clinical-grade workflow.
-            </p>
+        <div className="showcase-header-compact">
+          <div>
+            <span className="eyebrow red">PROJECT CAPABILITIES</span>
+            <h3>Everything CORTIA Does</h3>
           </div>
 
-          {/* Tab Selector Pills */}
-          <div className="showcase-tabs" role="tablist">
+          <div className="view-mode-switch">
             <button
-              className={`showcase-tab ${activeTab === "all" ? "active" : ""}`}
-              onClick={() => setActiveTab("all")}
+              className={`mode-btn ${viewMode === "grid" ? "active" : ""}`}
+              onClick={() => setViewMode("grid")}
+              title="Grid view"
             >
-              <Sparkles size={14} /> All Capabilities
+              <Grid3X3 size={14} /> Grid
             </button>
             <button
-              className={`showcase-tab ${activeTab === "eeg" ? "active" : ""}`}
-              onClick={() => setActiveTab("eeg")}
+              className={`mode-btn ${viewMode === "spotlight" ? "active" : ""}`}
+              onClick={() => setViewMode("spotlight")}
+              title="Interactive spotlight view"
             >
-              <Activity size={14} /> 1. Live EEG Telemetry
-            </button>
-            <button
-              className={`showcase-tab ${activeTab === "brainwaves" ? "active" : ""}`}
-              onClick={() => setActiveTab("brainwaves")}
-            >
-              <Waves size={14} /> 2. Brainwave Bands
-            </button>
-            <button
-              className={`showcase-tab ${activeTab === "baselines" ? "active" : ""}`}
-              onClick={() => setActiveTab("baselines")}
-            >
-              <Fingerprint size={14} /> 3. Personal Baselines
-            </button>
-            <button
-              className={`showcase-tab ${activeTab === "mri" ? "active" : ""}`}
-              onClick={() => setActiveTab("mri")}
-            >
-              <ScanLine size={14} /> 4. MRI Tumor AI
-            </button>
-            <button
-              className={`showcase-tab ${activeTab === "gradcam" ? "active" : ""}`}
-              onClick={() => setActiveTab("gradcam")}
-            >
-              <Layers size={14} /> 5. Grad-CAM XAI
-            </button>
-            <button
-              className={`showcase-tab ${activeTab === "ai" ? "active" : ""}`}
-              onClick={() => setActiveTab("ai")}
-            >
-              <Brain size={14} /> 6. Clinical Assistant
+              <SlidersHorizontal size={14} /> Spotlight
             </button>
           </div>
         </div>
 
-        {/* FEATURE 1: LIVE SINGLE-CHANNEL EEG */}
-        {(activeTab === "all" || activeTab === "eeg") && (
-          <div className="feature-showcase-card">
-            <div className="feature-meta">
-              <span className="feature-number">01</span>
-              <div>
-                <span className="feature-pill-badge">BIOPOTENTIAL HARDWARE & DSP</span>
-                <h3>Real-Time Single-Channel EEG Telemetry</h3>
-                <p className="feature-lead">
-                  Continuous microvolt biopotential acquisition directly from frontal scalp electrodes
-                  with hardware-level digital signal processing and artifact rejection.
-                </p>
+        {/* --- MODE A: VISUAL 2x3 FEATURE GRID (SIMPLE & VISUAL) --- */}
+        {viewMode === "grid" && (
+          <div className="features-compact-grid">
+            {/* 1. Live EEG */}
+            <div className="compact-feature-card">
+              <div className="card-top-row">
+                <span className="feature-chip red">
+                  <Activity size={13} /> Telemetry
+                </span>
+                <span className="card-badge-soft">250 Hz</span>
               </div>
+              <h4>1. Live EEG Streaming</h4>
+              <p className="card-sub-desc">
+                Streams microvolts in real time from forehead electrodes.
+              </p>
+
+              {/* Mini visual */}
+              <div className="card-mini-visual">
+                <svg viewBox="0 0 200 50" className="mini-svg" preserveAspectRatio="none">
+                  <path
+                    d="M 0 25 Q 25 10, 50 25 T 100 25 T 150 15 T 175 40 T 200 25"
+                    fill="none"
+                    stroke="#C94040"
+                    strokeWidth="2"
+                  />
+                </svg>
+                <div className="mini-tags-row">
+                  <span>50Hz Notch Filter</span>
+                  <span>Artifact Guard</span>
+                </div>
+              </div>
+
+              <ul className="simple-checklist">
+                <li><Check size={13} className="check-icon" /> USB serial streaming with Arduino UNO R4</li>
+                <li><Check size={13} className="check-icon" /> Filters power line noise automatically</li>
+                <li><Check size={13} className="check-icon" /> Detects blinks and muscle artifacts</li>
+              </ul>
+
+              <button className="compact-action-btn" onClick={() => navigate("Live EEG")}>
+                Open Live Monitor <ArrowRight size={13} />
+              </button>
             </div>
 
-            <div className="feature-content-split">
-              {/* Visual Demo */}
-              <div className="feature-visual-panel">
-                <div className="visual-top-bar">
-                  <div className="visual-indicator-group">
-                    <span className="pulse-dot green" />
-                    <span className="visual-title-tag">Oscilloscope Stream (µV)</span>
-                  </div>
-                  <div className="sim-mode-toggles">
-                    <button
-                      className={`sim-toggle ${eegSimState === "clean" ? "active" : ""}`}
-                      onClick={() => setEegSimState("clean")}
-                    >
-                      Resting EEG
-                    </button>
-                    <button
-                      className={`sim-toggle ${eegSimState === "alpha" ? "active" : ""}`}
-                      onClick={() => setEegSimState("alpha")}
-                    >
-                      Alpha Burst
-                    </button>
-                    <button
-                      className={`sim-toggle ${eegSimState === "blink" ? "active" : ""}`}
-                      onClick={() => setEegSimState("blink")}
-                    >
-                      Blink Artifact
-                    </button>
-                  </div>
-                </div>
+            {/* 2. Brainwave Bands */}
+            <div className="compact-feature-card">
+              <div className="card-top-row">
+                <span className="feature-chip amber">
+                  <Waves size={13} /> Brainwaves
+                </span>
+                <span className="card-badge-soft">5 Bands</span>
+              </div>
+              <h4>2. Brainwave Rhythms</h4>
+              <p className="card-sub-desc">
+                Breaks down your signal into mental rest, calm, and focus.
+              </p>
 
-                <div className="feature-waveform-preview">
-                  <svg viewBox="0 0 400 120" className="preview-svg-waveform" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="eegGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#C94040" stopOpacity="0.4" />
-                        <stop offset="50%" stopColor="#C94040" stopOpacity="1" />
-                        <stop offset="100%" stopColor="#D97706" stopOpacity="0.9" />
-                      </linearGradient>
-                    </defs>
-                    {/* Grid lines */}
-                    <line x1="0" y1="30" x2="400" y2="30" stroke="#EAE6DF" strokeDasharray="3 3" />
-                    <line x1="0" y1="60" x2="400" y2="60" stroke="#D1CDC4" strokeWidth="1" />
-                    <line x1="0" y1="90" x2="400" y2="90" stroke="#EAE6DF" strokeDasharray="3 3" />
-                    {/* Waveform polyline */}
-                    <path
-                      d={demoPoints
-                        .map((p, idx) => {
-                          const x = (idx / (demoPoints.length - 1)) * 400;
-                          const y = 60 - p.y * 0.7;
-                          return `${idx === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
-                        })
-                        .join(" ")}
-                      fill="none"
-                      stroke="url(#eegGrad)"
-                      strokeWidth="2.2"
-                    />
-                  </svg>
-                  <div className="waveform-metrics-overlay">
-                    <span>Baseline: 0 µV</span>
-                    <span>Range: -50 to +50 µV</span>
-                    <span>Rate: 250 Hz (14-bit ADC)</span>
+              {/* Mini visual */}
+              <div className="card-mini-visual">
+                <div className="mini-bars-stack">
+                  <div className="mini-bar-item">
+                    <span>Delta (Sleep)</span>
+                    <div className="m-bar"><div style={{ width: "65%", background: "#3B82F6" }} /></div>
                   </div>
-                </div>
-
-                <div className="feature-hardware-chips">
-                  <span className="spec-chip">
-                    <Cpu size={13} /> Arduino UNO R4 WiFi
-                  </span>
-                  <span className="spec-chip">
-                    <Zap size={13} /> UpsideDownLabs BioAmp EXG
-                  </span>
-                  <span className="spec-chip">
-                    <ShieldCheck size={13} /> 50/60Hz Notch Filter
-                  </span>
-                  <span className="spec-chip">
-                    <Activity size={13} /> 0.5–45 Hz Bandpass
-                  </span>
+                  <div className="mini-bar-item">
+                    <span>Alpha (Calm)</span>
+                    <div className="m-bar"><div style={{ width: "40%", background: "#F59E0B" }} /></div>
+                  </div>
+                  <div className="mini-bar-item">
+                    <span>Beta (Focus)</span>
+                    <div className="m-bar"><div style={{ width: "25%", background: "#EF4444" }} /></div>
+                  </div>
                 </div>
               </div>
 
-              {/* Explanatory Points */}
-              <div className="feature-points-panel">
-                <h4 className="points-title">Key Capabilities & Architecture</h4>
-                <ul className="feature-bullets">
-                  <li>
-                    <strong>Non-Invasive Frontal Acquisition:</strong> Measures microvolt-level potential shifts from frontal electrodes (Fp1/Fp2) referenced to the earlobe, safely isolated from AC mains power.
-                  </li>
-                  <li>
-                    <strong>Real-Time Dual Filtering (DSP):</strong> Software IIR notch filters instantly excise 50 Hz / 60 Hz electrical grid noise, while a 0.5–45 Hz bandpass eliminates slow DC skin drift and muscle tremor.
-                  </li>
-                  <li>
-                    <strong>Rolling 8-Second Epoch Screening:</strong> Evaluates signal quality window-by-window. If excessive movement, jaw clenching (EMG), or electrode dislodgement is detected, the epoch is flagged and excluded from baselines.
-                  </li>
-                  <li>
-                    <strong>Strict Zero-Simulation Guarantee:</strong> Never manufactures pseudo-random EEG when offline; maintains strict diagnostic transparency by displaying disconnected telemetry when hardware is unlinked.
-                  </li>
-                </ul>
+              <ul className="simple-checklist">
+                <li><Check size={13} className="check-icon" /> Delta, Theta, Alpha, Beta & Gamma bands</li>
+                <li><Check size={13} className="check-icon" /> Identifies calm eyes-closed relaxation</li>
+                <li><Check size={13} className="check-icon" /> Measures mental fatigue (Theta/Beta ratio)</li>
+              </ul>
 
-                <div className="feature-action-row">
+              <button className="compact-action-btn" onClick={() => navigate("Brainwaves")}>
+                Explore Brainwaves <ArrowRight size={13} />
+              </button>
+            </div>
+
+            {/* 3. Personal Baselines */}
+            <div className="compact-feature-card">
+              <div className="card-top-row">
+                <span className="feature-chip green">
+                  <Fingerprint size={13} /> Baselines
+                </span>
+                <span className="card-badge-soft">Self-Normal</span>
+              </div>
+              <h4>3. Personal Baselines</h4>
+              <p className="card-sub-desc">
+                Learns your unique rhythm from 3 clean recordings.
+              </p>
+
+              {/* Mini visual */}
+              <div className="card-mini-visual">
+                <div className="mini-envelope-box">
+                  <span className="env-tag upper">+2σ Stress / Alert</span>
+                  <span className="env-tag center">● Your Normal Rest</span>
+                  <span className="env-tag lower">-2σ Drowsiness</span>
+                </div>
+              </div>
+
+              <ul className="simple-checklist">
+                <li><Check size={13} className="check-icon" /> Compares you against yourself, not strangers</li>
+                <li><Check size={13} className="check-icon" /> Tracks subtle shifts in stress & recovery</li>
+                <li><Check size={13} className="check-icon" /> Flags unusual sessions automatically</li>
+              </ul>
+
+              <button className="compact-action-btn" onClick={() => navigate("Baselines")}>
+                View Baselines <ArrowRight size={13} />
+              </button>
+            </div>
+
+            {/* 4. MRI Tumor Classifier */}
+            <div className="compact-feature-card">
+              <div className="card-top-row">
+                <span className="feature-chip purple">
+                  <ScanLine size={13} /> MRI Vision
+                </span>
+                <span className="card-badge-soft">4 Classes</span>
+              </div>
+              <h4>4. MRI Tumor Classifier</h4>
+              <p className="card-sub-desc">
+                Deep learning model classifying brain tumors in &lt;120ms.
+              </p>
+
+              {/* Mini visual */}
+              <div className="card-mini-visual">
+                <div className="mini-chips-grid">
+                  <span className="mri-tag pit">Pituitary</span>
+                  <span className="mri-tag glio">Glioma</span>
+                  <span className="mri-tag men">Meningioma</span>
+                  <span className="mri-tag hlth">No Tumor</span>
+                </div>
+              </div>
+
+              <ul className="simple-checklist">
+                <li><Check size={13} className="check-icon" /> Works with DICOM, PNG & JPEG scans</li>
+                <li><Check size={13} className="check-icon" /> Edge TFLite (5MB) + Full CNN (28MB)</li>
+                <li><Check size={13} className="check-icon" /> 100% benchmark verification accuracy</li>
+              </ul>
+
+              <button className="compact-action-btn" onClick={() => navigate("MRI Analysis")}>
+                Classify MRI Scan <ArrowRight size={13} />
+              </button>
+            </div>
+
+            {/* 5. Grad-CAM Explainable AI */}
+            <div className="compact-feature-card">
+              <div className="card-top-row">
+                <span className="feature-chip blue">
+                  <Layers size={13} /> Explainable AI
+                </span>
+                <span className="card-badge-soft">Grad-CAM</span>
+              </div>
+              <h4>5. Visual Heatmaps (XAI)</h4>
+              <p className="card-sub-desc">
+                Shows exactly where the neural network is looking.
+              </p>
+
+              {/* Mini visual */}
+              <div className="card-mini-visual">
+                <div className="mini-heat-compare">
+                  <div className="mini-scan-slice">MRI</div>
+                  <ArrowRight size={12} className="muted-arrow" />
+                  <div className="mini-scan-slice heat">
+                    <span className="glow-dot" /> Heatmap
+                  </div>
+                </div>
+              </div>
+
+              <ul className="simple-checklist">
+                <li><Check size={13} className="check-icon" /> Thermal overlay reveals model focus</li>
+                <li><Check size={13} className="check-icon" /> Verifies tumor location, eliminates guesswork</li>
+                <li><Check size={13} className="check-icon" /> Distinguishes AI focus from surgical margins</li>
+              </ul>
+
+              <button className="compact-action-btn" onClick={() => navigate("MRI Analysis")}>
+                Inspect Heatmaps <ArrowRight size={13} />
+              </button>
+            </div>
+
+            {/* 6. Medical AI Assistant */}
+            <div className="compact-feature-card">
+              <div className="card-top-row">
+                <span className="feature-chip teal">
+                  <Brain size={13} /> Medical AI
+                </span>
+                <span className="card-badge-soft">Gemini 3.8</span>
+              </div>
+              <h4>6. Clinical AI Assistant</h4>
+              <p className="card-sub-desc">
+                Answers questions in simple language with clinical tools.
+              </p>
+
+              {/* Mini visual */}
+              <div className="card-mini-visual">
+                <div className="mini-chat-bubble">
+                  <strong>CORTIA Assistant:</strong>
+                  <span>"Your 92% Delta rhythm reflects deep, restorative relaxation."</span>
+                </div>
+              </div>
+
+              <ul className="simple-checklist">
+                <li><Check size={13} className="check-icon" /> Combines MRI predictions + EEG brainwaves</li>
+                <li><Check size={13} className="check-icon" /> Plain-language summaries without jargon</li>
+                <li><Check size={13} className="check-icon" /> Stress relief and mental health support</li>
+              </ul>
+
+              <button className="compact-action-btn" onClick={() => navigate("AI Insights")}>
+                Ask AI Assistant <ArrowRight size={13} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* --- MODE B: INTERACTIVE SPOTLIGHT (CLICK TABS TO EXPLORE 1 FEATURE) --- */}
+        {viewMode === "spotlight" && (
+          <div className="spotlight-container">
+            <div className="showcase-tabs" role="tablist">
+              <button
+                className={`showcase-tab ${activeTab === "eeg" ? "active" : ""}`}
+                onClick={() => setActiveTab("eeg")}
+              >
+                <Activity size={14} /> 1. Live EEG
+              </button>
+              <button
+                className={`showcase-tab ${activeTab === "brainwaves" ? "active" : ""}`}
+                onClick={() => setActiveTab("brainwaves")}
+              >
+                <Waves size={14} /> 2. Brainwaves
+              </button>
+              <button
+                className={`showcase-tab ${activeTab === "baselines" ? "active" : ""}`}
+                onClick={() => setActiveTab("baselines")}
+              >
+                <Fingerprint size={14} /> 3. Baselines
+              </button>
+              <button
+                className={`showcase-tab ${activeTab === "mri" ? "active" : ""}`}
+                onClick={() => setActiveTab("mri")}
+              >
+                <ScanLine size={14} /> 4. MRI Tumor AI
+              </button>
+              <button
+                className={`showcase-tab ${activeTab === "gradcam" ? "active" : ""}`}
+                onClick={() => setActiveTab("gradcam")}
+              >
+                <Layers size={14} /> 5. Grad-CAM
+              </button>
+              <button
+                className={`showcase-tab ${activeTab === "ai" ? "active" : ""}`}
+                onClick={() => setActiveTab("ai")}
+              >
+                <Brain size={14} /> 6. AI Assistant
+              </button>
+            </div>
+
+            {/* Spotlight Card 1: EEG */}
+            {activeTab === "eeg" && (
+              <div className="spotlight-card">
+                <div className="spotlight-visual-side">
+                  <div className="visual-top-bar">
+                    <span className="visual-title-tag">Oscilloscope Stream (µV)</span>
+                    <div className="sim-mode-toggles">
+                      <button
+                        className={`sim-toggle ${eegSimState === "clean" ? "active" : ""}`}
+                        onClick={() => setEegSimState("clean")}
+                      >
+                        Resting
+                      </button>
+                      <button
+                        className={`sim-toggle ${eegSimState === "alpha" ? "active" : ""}`}
+                        onClick={() => setEegSimState("alpha")}
+                      >
+                        Alpha
+                      </button>
+                      <button
+                        className={`sim-toggle ${eegSimState === "blink" ? "active" : ""}`}
+                        onClick={() => setEegSimState("blink")}
+                      >
+                        Blink
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="feature-waveform-preview">
+                    <svg viewBox="0 0 400 100" className="preview-svg-waveform" preserveAspectRatio="none">
+                      <path
+                        d={demoPoints
+                          .map((p, idx) => {
+                            const x = (idx / (demoPoints.length - 1)) * 400;
+                            const y = 50 - p.y * 0.6;
+                            return `${idx === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
+                          })
+                          .join(" ")}
+                        fill="none"
+                        stroke="#C94040"
+                        strokeWidth="2.2"
+                      />
+                    </svg>
+                  </div>
+
+                  <div className="feature-hardware-chips">
+                    <span className="spec-chip"><Cpu size={12} /> Arduino UNO R4</span>
+                    <span className="spec-chip"><Zap size={12} /> BioAmp EXG</span>
+                    <span className="spec-chip"><ShieldCheck size={12} /> 50/60Hz Filter</span>
+                  </div>
+                </div>
+
+                <div className="spotlight-info-side">
+                  <span className="spotlight-step">FEATURE 01</span>
+                  <h3>Real-Time EEG Telemetry</h3>
+                  <p className="spotlight-lead">
+                    Measures microvolts directly from frontal electrodes with instant noise filtering.
+                  </p>
+                  <ul className="spotlight-points">
+                    <li><strong>Continuous stream:</strong> 250 samples per second from non-invasive sensors.</li>
+                    <li><strong>Noise removal:</strong> Cancels 50/60 Hz power mains hum in real time.</li>
+                    <li><strong>Blink rejection:</strong> Automatically flags eye movements and jaw clenching.</li>
+                  </ul>
                   <button className="feature-nav-btn" onClick={() => navigate("Live EEG")}>
                     Open Live EEG Monitor <ArrowRight size={14} />
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* FEATURE 2: BRAINWAVE FREQUENCY BANDS */}
-        {(activeTab === "all" || activeTab === "brainwaves") && (
-          <div className="feature-showcase-card">
-            <div className="feature-meta">
-              <span className="feature-number">02</span>
-              <div>
-                <span className="feature-pill-badge">SPECTRAL DECOMPOSITION & NEURODYNAMICS</span>
-                <h3>Brainwave Bands & Welch's Power Spectral Density (PSD)</h3>
-                <p className="feature-lead">
-                  Splits the complex raw biopotential signal into clinical frequency bands to reveal
-                  mental workload, sleep architecture, relaxation, and cognitive focus.
-                </p>
-              </div>
-            </div>
-
-            <div className="feature-content-split">
-              {/* Visual Breakdown of Bands */}
-              <div className="feature-visual-panel">
-                <div className="bands-visual-stack">
-                  <div className="band-visual-row delta">
-                    <div className="band-info">
-                      <strong className="band-name">Delta (0.5 – 4 Hz)</strong>
-                      <span className="band-state">Deep restorative sleep, somatic quiet</span>
+            {/* Spotlight Card 2: Brainwaves */}
+            {activeTab === "brainwaves" && (
+              <div className="spotlight-card">
+                <div className="spotlight-visual-side">
+                  <div className="bands-visual-stack">
+                    <div className="band-visual-row">
+                      <div className="band-info"><strong className="band-name">Delta (0.5–4 Hz)</strong><span className="band-state">Deep restorative rest</span></div>
+                      <div className="band-bar-container"><div className="band-bar" style={{ width: "45%", backgroundColor: "#3B82F6" }} /></div>
+                      <span className="band-pct">45%</span>
                     </div>
-                    <div className="band-bar-container">
-                      <div className="band-bar" style={{ width: "45%", backgroundColor: "#3B82F6" }} />
+                    <div className="band-visual-row">
+                      <div className="band-info"><strong className="band-name">Theta (4–8 Hz)</strong><span className="band-state">Meditation & memory</span></div>
+                      <div className="band-bar-container"><div className="band-bar" style={{ width: "22%", backgroundColor: "#10B981" }} /></div>
+                      <span className="band-pct">22%</span>
                     </div>
-                    <span className="band-pct">45.0%</span>
-                  </div>
-
-                  <div className="band-visual-row theta">
-                    <div className="band-info">
-                      <strong className="band-name">Theta (4 – 8 Hz)</strong>
-                      <span className="band-state">Drowsiness, meditation, memory consolidation</span>
+                    <div className="band-visual-row">
+                      <div className="band-info"><strong className="band-name">Alpha (8–13 Hz)</strong><span className="band-state">Calm alertness</span></div>
+                      <div className="band-bar-container"><div className="band-bar" style={{ width: "18%", backgroundColor: "#F59E0B" }} /></div>
+                      <span className="band-pct">18%</span>
                     </div>
-                    <div className="band-bar-container">
-                      <div className="band-bar" style={{ width: "22%", backgroundColor: "#10B981" }} />
+                    <div className="band-visual-row">
+                      <div className="band-info"><strong className="band-name">Beta (13–30 Hz)</strong><span className="band-state">Active thinking</span></div>
+                      <div className="band-bar-container"><div className="band-bar" style={{ width: "12%", backgroundColor: "#EF4444" }} /></div>
+                      <span className="band-pct">12%</span>
                     </div>
-                    <span className="band-pct">22.0%</span>
-                  </div>
-
-                  <div className="band-visual-row alpha">
-                    <div className="band-info">
-                      <strong className="band-name">Alpha (8 – 13 Hz)</strong>
-                      <span className="band-state">Calm alertness, eyes-closed relaxation, tranquility</span>
-                    </div>
-                    <div className="band-bar-container">
-                      <div className="band-bar" style={{ width: "18%", backgroundColor: "#F59E0B" }} />
-                    </div>
-                    <span className="band-pct">18.0%</span>
-                  </div>
-
-                  <div className="band-visual-row beta">
-                    <div className="band-info">
-                      <strong className="band-name">Beta (13 – 30 Hz)</strong>
-                      <span className="band-state">Active cognition, analytical focus, mental problem-solving</span>
-                    </div>
-                    <div className="band-bar-container">
-                      <div className="band-bar" style={{ width: "12%", backgroundColor: "#EF4444" }} />
-                    </div>
-                    <span className="band-pct">12.0%</span>
-                  </div>
-
-                  <div className="band-visual-row gamma">
-                    <div className="band-info">
-                      <strong className="band-name">Gamma (30 – 45 Hz)</strong>
-                      <span className="band-state">Multi-sensory cognitive binding, rapid insight</span>
-                    </div>
-                    <div className="band-bar-container">
-                      <div className="band-bar" style={{ width: "3%", backgroundColor: "#8B5CF6" }} />
-                    </div>
-                    <span className="band-pct">3.0%</span>
                   </div>
                 </div>
 
-                <div className="ratio-highlight-box">
-                  <div className="ratio-title">
-                    <BarChart3 size={15} />
-                    <strong>Clinical Neuro Ratio: Theta / Beta (TBR) = 1.83</strong>
-                  </div>
-                  <p className="ratio-desc">
-                    A key index of cognitive engagement and executive fatigue. Elevated values correlate with cognitive exhaustion, while lower values reflect acute analytical focus.
+                <div className="spotlight-info-side">
+                  <span className="spotlight-step">FEATURE 02</span>
+                  <h3>Brainwave Frequency Bands</h3>
+                  <p className="spotlight-lead">
+                    Translates raw electrical waves into mental states like deep relaxation or sharp focus.
                   </p>
-                </div>
-              </div>
-
-              {/* Explanatory Points */}
-              <div className="feature-points-panel">
-                <h4 className="points-title">Scientific Principles & Metrics</h4>
-                <ul className="feature-bullets">
-                  <li>
-                    <strong>Welch's Periodogram Analysis:</strong> Transforms microvolts over time into the frequency spectrum (0.5 to 45 Hz), minimizing spectral leakage with Hanning windowing.
-                  </li>
-                  <li>
-                    <strong>Relative Power Normalization:</strong> Expresses each frequency band as an exact percentage of total spectral energy, preventing scalp-skin contact variance from skewing comparative readings.
-                  </li>
-                  <li>
-                    <strong>Cognitive Task Differentiation:</strong> Real-time changes visibly document the classic Berger effect (sudden Alpha surge upon closing eyes) and Beta surge during computational challenges.
-                  </li>
-                  <li>
-                    <strong>Physiological Evidence Extraction:</strong> Feeds clean relative power figures directly to the clinical AI assistant for longitudinal reporting.
-                  </li>
-                </ul>
-
-                <div className="feature-action-row">
+                  <ul className="spotlight-points">
+                    <li><strong>5 Standard rhythms:</strong> Delta, Theta, Alpha, Beta, and Gamma.</li>
+                    <li><strong>Relaxation surge:</strong> Shows calm Alpha increase when closing eyes.</li>
+                    <li><strong>Focus index:</strong> Calculates Theta/Beta workload ratio.</li>
+                  </ul>
                   <button className="feature-nav-btn" onClick={() => navigate("Brainwaves")}>
-                    Inspect Brainwave Decomposition <ArrowRight size={14} />
+                    Inspect Brainwave Bands <ArrowRight size={14} />
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* FEATURE 3: PERSONALIZED BASELINES & TRENDS */}
-        {(activeTab === "all" || activeTab === "baselines") && (
-          <div className="feature-showcase-card">
-            <div className="feature-meta">
-              <span className="feature-number">03</span>
-              <div>
-                <span className="feature-pill-badge">EMPIRICAL SELF-NORMALIZATION</span>
-                <h3>Personalized Baselines & Longitudinal Trends</h3>
-                <p className="feature-lead">
-                  Establishes an empirical personal reference envelope across sessions rather than relying
-                  on misleading population averages.
-                </p>
-              </div>
-            </div>
-
-            <div className="feature-content-split">
-              {/* Visual Baseline Envelope */}
-              <div className="feature-visual-panel">
-                <div className="baseline-visual-box">
-                  <div className="baseline-visual-header">
-                    <span className="visual-title-tag">Personal Normal Envelope (Z-Scores)</span>
-                    <Badge tone="green">Calibrated (3 Sessions)</Badge>
-                  </div>
-                  <div className="baseline-envelope-graphic">
-                    <div className="envelope-zone upper">
-                      <span>+2σ Deviation Zone (Fatigue / Stress)</span>
-                    </div>
-                    <div className="envelope-zone normal">
-                      <span className="center-target">Your Personal Rest Baseline (0.0σ)</span>
-                      <div className="active-sample-dot" title="Today's Session: +0.2σ within normal band" />
-                    </div>
-                    <div className="envelope-zone lower">
-                      <span>-2σ Deviation Zone (Drowsiness / Hypoactivity)</span>
-                    </div>
-                  </div>
-                  <div className="baseline-summary-metrics">
-                    <div className="b-metric">
-                      <strong>0.21σ</strong>
-                      <span>Today's Z-Deviation</span>
-                    </div>
-                    <div className="b-metric">
-                      <strong>96.4%</strong>
-                      <span>Consistency Index</span>
-                    </div>
-                    <div className="b-metric">
-                      <strong>Stable</strong>
-                      <span>Longitudinal Drift</span>
+            {/* Spotlight Card 3: Baselines */}
+            {activeTab === "baselines" && (
+              <div className="spotlight-card">
+                <div className="spotlight-visual-side">
+                  <div className="baseline-visual-box">
+                    <div className="baseline-envelope-graphic">
+                      <div className="envelope-zone upper"><span>+2σ Stress / Strain</span></div>
+                      <div className="envelope-zone normal"><span className="center-target">Your Normal Rest (0.0σ)</span><div className="active-sample-dot" /></div>
+                      <div className="envelope-zone lower"><span>-2σ Drowsiness</span></div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Explanatory Points */}
-              <div className="feature-points-panel">
-                <h4 className="points-title">Calibration Protocol & Benefits</h4>
-                <ul className="feature-bullets">
-                  <li>
-                    <strong>Authentic Self-Referencing:</strong> Requires at least 3 valid, comparable recordings under identical resting conditions (e.g. eyes-closed resting frontal) to calculate the mean and standard deviation.
-                  </li>
-                  <li>
-                    <strong>Outlier & Anomaly Detection:</strong> Instantly isolates recording sessions that deviate by more than $\pm 2.0$ standard deviations, alerting clinicians to poor sleep, caffeine surges, or acute stress.
-                  </li>
-                  <li>
-                    <strong>Longitudinal Stability:</strong> Tracks how your brain's natural electrical rhythm evolves across weeks and months, highlighting recovery trends after cognitive strain.
-                  </li>
-                </ul>
-
-                <div className="feature-action-row">
+                <div className="spotlight-info-side">
+                  <span className="spotlight-step">FEATURE 03</span>
+                  <h3>Personal Baselines</h3>
+                  <p className="spotlight-lead">
+                    Establishes your personal normal range from 3 clean recordings.
+                  </p>
+                  <ul className="spotlight-points">
+                    <li><strong>True self-reference:</strong> Never forces population stereotypes on your brain.</li>
+                    <li><strong>Trend tracking:</strong> Shows how sleep and stress shift your rhythms.</li>
+                    <li><strong>Anomaly alerts:</strong> Flags sessions that deviate from your normal.</li>
+                  </ul>
                   <button className="feature-nav-btn" onClick={() => navigate("Baselines")}>
                     View Personal Baselines <ArrowRight size={14} />
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* FEATURE 4: NEURO-ONCOLOGY BRAIN MRI CLASSIFICATION */}
-        {(activeTab === "all" || activeTab === "mri") && (
-          <div className="feature-showcase-card">
-            <div className="feature-meta">
-              <span className="feature-number">04</span>
-              <div>
-                <span className="feature-pill-badge">NEURO-ONCOLOGY COMPUTER VISION</span>
-                <h3>Deep Learning Brain MRI Tumor Classification</h3>
-                <p className="feature-lead">
-                  Automated diagnostic triaging across 4 primary neuroimaging classes using a deep
-                  convolutional neural network with edge TFLite deployment.
-                </p>
-              </div>
-            </div>
-
-            <div className="feature-content-split">
-              {/* Visual Classifier Showcase */}
-              <div className="feature-visual-panel">
-                <div className="mri-class-tabs">
-                  {mriClasses.map((item, idx) => (
-                    <button
-                      key={item.name}
-                      className={`mri-class-tab ${selectedMriClass === idx ? "active" : ""}`}
-                      onClick={() => setSelectedMriClass(idx)}
-                    >
-                      {item.name}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="mri-class-detail-card">
-                  <div className="mri-detail-head">
-                    <div>
-                      <span className="mri-cat-badge">{mriClasses[selectedMriClass].badge}</span>
-                      <h4>{mriClasses[selectedMriClass].name}</h4>
-                      <span className="mri-sub-name">{mriClasses[selectedMriClass].type}</span>
-                    </div>
-                    <div className="mri-conf-badge" style={{ borderColor: mriClasses[selectedMriClass].color }}>
-                      <strong>{mriClasses[selectedMriClass].confidence}</strong>
-                      <span>Benchmark Accuracy</span>
-                    </div>
+            {/* Spotlight Card 4: MRI */}
+            {activeTab === "mri" && (
+              <div className="spotlight-card">
+                <div className="spotlight-visual-side">
+                  <div className="mri-class-tabs">
+                    {mriClasses.map((item, idx) => (
+                      <button
+                        key={item.name}
+                        className={`mri-class-tab ${selectedMriClass === idx ? "active" : ""}`}
+                        onClick={() => setSelectedMriClass(idx)}
+                      >
+                        {item.name}
+                      </button>
+                    ))}
                   </div>
-                  <p className="mri-class-desc">{mriClasses[selectedMriClass].desc}</p>
-
-                  <div className="mri-specs-grid">
-                    <div className="mri-spec-item">
-                      <Cpu size={14} />
+                  <div className="mri-class-detail-card">
+                    <div className="mri-detail-head">
                       <div>
-                        <strong>Edge TFLite (~5 MB)</strong>
-                        <span>Fast client-side inference</span>
+                        <h4>{mriClasses[selectedMriClass].name}</h4>
+                        <span className="mri-sub-name">{mriClasses[selectedMriClass].type}</span>
                       </div>
+                      <Badge tone="green">{mriClasses[selectedMriClass].confidence}</Badge>
                     </div>
-                    <div className="mri-spec-item">
-                      <Layers size={14} />
-                      <div>
-                        <strong>Deep Keras CNN (~28 MB)</strong>
-                        <span>Full precision FP32 architecture</span>
-                      </div>
-                    </div>
-                    <div className="mri-spec-item">
-                      <Zap size={14} />
-                      <div>
-                        <strong>&lt;120 ms Latency</strong>
-                        <span>Standard 224x224 RGB input</span>
-                      </div>
-                    </div>
-                    <div className="mri-spec-item">
-                      <ScanLine size={14} />
-                      <div>
-                        <strong>DICOM / PNG / JPEG</strong>
-                        <span>Axial, Sagittal & Coronal scans</span>
-                      </div>
-                    </div>
+                    <p className="mri-class-desc">{mriClasses[selectedMriClass].desc}</p>
                   </div>
                 </div>
-              </div>
 
-              {/* Explanatory Points */}
-              <div className="feature-points-panel">
-                <h4 className="points-title">Architecture & Clinical Validation</h4>
-                <ul className="feature-bullets">
-                  <li>
-                    <strong>Four Distinct Pathological Classes:</strong> Differentiates Pituitary Adenomas, Glial Neoplasms (Gliomas), Meningiomas, and Healthy scans without tumor presence.
-                  </li>
-                  <li>
-                    <strong>Dual-Engine Deployment:</strong> Employs both a lightweight TFLite model for instant browser-based execution and a high-precision deep model for comprehensive clinical analysis.
-                  </li>
-                  <li>
-                    <strong>Standardized Image Preprocessing:</strong> Automatic intensity normalization, skull-contrast harmonization, and 224x224 tensor reshaping guarantee resilient model performance.
-                  </li>
-                  <li>
-                    <strong>Rigorously Benchmarked:</strong> Validated against benchmark neuroimaging cohorts (including BraTS candidate datasets) achieving 100% test verification accuracy.
-                  </li>
-                </ul>
-
-                <div className="feature-action-row">
+                <div className="spotlight-info-side">
+                  <span className="spotlight-step">FEATURE 04</span>
+                  <h3>MRI Tumor Classification</h3>
+                  <p className="spotlight-lead">
+                    Automated triaging across 4 diagnostic neuroimaging classes in under 120ms.
+                  </p>
+                  <ul className="spotlight-points">
+                    <li><strong>4 Classes:</strong> Pituitary, Glioma, Meningioma, and Healthy Brain.</li>
+                    <li><strong>Universal formats:</strong> Evaluates DICOM, PNG, and JPEG scans.</li>
+                    <li><strong>High accuracy:</strong> 100% verified on candidate test cohorts.</li>
+                  </ul>
                   <button className="feature-nav-btn" onClick={() => navigate("MRI Analysis")}>
-                    Upload & Classify MRI Scan <ArrowRight size={14} />
+                    Upload MRI Scan <ArrowRight size={14} />
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* FEATURE 5: EXPLAINABLE AI (GRAD-CAM SALIENCY) */}
-        {(activeTab === "all" || activeTab === "gradcam") && (
-          <div className="feature-showcase-card">
-            <div className="feature-meta">
-              <span className="feature-number">05</span>
-              <div>
-                <span className="feature-pill-badge">INTERPRETABILITY & TRUST</span>
-                <h3>Explainable AI via Grad-CAM Attention Heatmaps</h3>
-                <p className="feature-lead">
-                  Replaces black-box predictions with spatial attention maps, verifying that the neural
-                  network bases its diagnosis on genuine anatomical pathology.
-                </p>
-              </div>
-            </div>
-
-            <div className="feature-content-split">
-              {/* Visual Side-by-Side Saliency */}
-              <div className="feature-visual-panel">
-                <div className="xai-comparison-container">
-                  <div className="xai-slice-frame">
-                    <div className="xai-slice-header">Raw MRI Axial Slice</div>
-                    <div className="xai-scan-mockup scan-raw">
-                      <div className="mri-brain-contour" />
-                      <div className="mri-tumor-contour" />
-                      <span className="scan-label-bottom">T1-Weighted Contrast</span>
+            {/* Spotlight Card 5: Grad-CAM */}
+            {activeTab === "gradcam" && (
+              <div className="spotlight-card">
+                <div className="spotlight-visual-side">
+                  <div className="xai-comparison-container">
+                    <div className="xai-slice-frame">
+                      <div className="xai-slice-header">Raw MRI</div>
+                      <div className="xai-scan-mockup scan-raw">
+                        <div className="mri-brain-contour" />
+                        <div className="mri-tumor-contour" />
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="xai-slice-frame">
-                    <div className="xai-slice-header">Grad-CAM Saliency Overlay</div>
-                    <div className="xai-scan-mockup scan-heatmap">
-                      <div className="mri-brain-contour" />
-                      <div className="mri-heatmap-glow" />
-                      <span className="scan-label-bottom">Feature Attention Focus</span>
+                    <div className="xai-slice-frame">
+                      <div className="xai-slice-header">Grad-CAM Overlay</div>
+                      <div className="xai-scan-mockup scan-heatmap">
+                        <div className="mri-brain-contour" />
+                        <div className="mri-heatmap-glow" />
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="xai-legend-bar">
-                  <span className="legend-label">Cool (Zero weight)</span>
-                  <div className="thermal-gradient-line" />
-                  <span className="legend-label">Hot (Peak algorithmic attention)</span>
-                </div>
-              </div>
-
-              {/* Explanatory Points */}
-              <div className="feature-points-panel">
-                <h4 className="points-title">Explainability Mechanism & Clinical Guardrails</h4>
-                <ul className="feature-bullets">
-                  <li>
-                    <strong>Gradient-Weighted Class Activation:</strong> Backpropagates the predicted class gradient into the final convolutional layer, projecting spatial weights onto the original anatomy.
-                  </li>
-                  <li>
-                    <strong>Diagnostic Sanity Checking:</strong> Clinicians can immediately confirm that the network is anchoring its decision on the actual lesion rather than imaging artifacts, skull contours, or text markers.
-                  </li>
-                  <li>
-                    <strong>Crucial Clinical Boundary:</strong> Grad-CAM highlights algorithmic attention, NOT microscopic cellular or histological margins. It is an explainability tool, not a stereotactic surgical resection guide.
-                  </li>
-                </ul>
-
-                <div className="feature-action-row">
+                <div className="spotlight-info-side">
+                  <span className="spotlight-step">FEATURE 05</span>
+                  <h3>Explainable AI (Grad-CAM)</h3>
+                  <p className="spotlight-lead">
+                    Visual heatmaps confirm the neural network is looking at genuine tumor tissue.
+                  </p>
+                  <ul className="spotlight-points">
+                    <li><strong>Visual attention:</strong> Highlights the pixels driving the prediction.</li>
+                    <li><strong>Sanity check:</strong> Ensures the model isn't tricked by scan borders.</li>
+                    <li><strong>Safe boundaries:</strong> Visual interpretability tool, not surgical margins.</li>
+                  </ul>
                   <button className="feature-nav-btn" onClick={() => navigate("MRI Analysis")}>
-                    Inspect Grad-CAM Saliency <ArrowRight size={14} />
+                    Inspect Grad-CAM <ArrowRight size={14} />
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* FEATURE 6: CORTIA MEDICAL & BRAIN HEALTH AI ASSISTANT */}
-        {(activeTab === "all" || activeTab === "ai") && (
-          <div className="feature-showcase-card">
-            <div className="feature-meta">
-              <span className="feature-number">06</span>
-              <div>
-                <span className="feature-pill-badge">CLINICAL MULTI-MODAL INTELLIGENCE</span>
-                <h3>CORTIA Medical AI & Brain Health Assistant</h3>
-                <p className="feature-lead">
-                  Autonomous clinical agent powered by Gemini AI with specialized medical domain tools
-                  to translate complex electrophysiology and neuroimaging into clear clinical guidance.
-                </p>
-              </div>
-            </div>
-
-            <div className="feature-content-split">
-              {/* Visual Chat Assistant Preview */}
-              <div className="feature-visual-panel">
-                <div className="ai-chat-preview-box">
-                  <div className="ai-preview-header">
-                    <div className="ai-model-tag">
-                      <Sparkles size={13} />
-                      <span>antigravity/gemini-3.8-flash-high</span>
-                      <span className="status-online">Online</span>
+            {/* Spotlight Card 6: AI Assistant */}
+            {activeTab === "ai" && (
+              <div className="spotlight-card">
+                <div className="spotlight-visual-side">
+                  <div className="ai-chat-preview-box">
+                    <div className="ai-speech-bubble user">
+                      <span>Explain my 92% Delta reading simply.</span>
                     </div>
-                  </div>
-
-                  <div className="ai-tool-ribbon">
-                    <span className="tool-chip"><ShieldCheck size={12} /> mri_tumor_consult</span>
-                    <span className="tool-chip"><Activity size={12} /> eeg_evidence_explainer</span>
-                    <span className="tool-chip"><Layers size={12} /> gradcam_interpret</span>
-                    <span className="tool-chip"><HeartPulse size={12} /> mental_health_stress_relief</span>
-                  </div>
-
-                  <div className="ai-speech-bubble user">
-                    <span>Explain what a 92% Delta reading means in simple terms.</span>
-                  </div>
-
-                  <div className="ai-speech-bubble assistant">
-                    <div className="assistant-badge-row">
-                      <Brain size={14} />
-                      <strong>CORTIA Assistant (Patient Mode)</strong>
-                    </div>
-                    <p>
-                      <strong>Deep Rest & Slow-Wave Rhythm (Delta: 92%):</strong><br />
-                      Delta is your brain's slowest natural rhythm. It typically dominates during deep restorative sleep or deep physical relaxation. On a forehead sensor, higher delta can also reflect calm closed eyes.
-                    </p>
-                    <div className="simple-bars-mini">
-                      <span>Rest: 92%</span>
-                      <span>Calm: 1.4%</span>
-                      <span>Focus: 0.3%</span>
+                    <div className="ai-speech-bubble assistant">
+                      <div className="assistant-badge-row">
+                        <Brain size={13} />
+                        <strong>CORTIA Assistant</strong>
+                      </div>
+                      <p>
+                        "Delta is your brain's slowest wave. A 92% level means your mind is in deep, restful relaxation."
+                      </p>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Explanatory Points */}
-              <div className="feature-points-panel">
-                <h4 className="points-title">Specialized Clinical Capabilities</h4>
-                <ul className="feature-bullets">
-                  <li>
-                    <strong>Evidence-Grounded Multi-Modal Synthesis:</strong> Automatically unites patient MRI scan classifications with real EEG telemetry to generate comprehensive neurological summaries.
-                  </li>
-                  <li>
-                    <strong>Autonomous Medical Tools:</strong> Queries dedicated clinical functions for neuro-oncology questions, Grad-CAM interpretation, EEG evidence translation, and stress relief physiology.
-                  </li>
-                  <li>
-                    <strong>Dual Communication Modes:</strong> Provides deep neuro-oncological interpretations for physicians while offering clear, visual, jargon-free explanations for patients and families.
-                  </li>
-                  <li>
-                    <strong>Evidence Transparency:</strong> Every conclusion is backed by verified mathematical signal properties, transparent data provenance, and clear clinical disclaimers.
-                  </li>
-                </ul>
-
-                <div className="feature-action-row">
+                <div className="spotlight-info-side">
+                  <span className="spotlight-step">FEATURE 06</span>
+                  <h3>CORTIA Medical AI</h3>
+                  <p className="spotlight-lead">
+                    Translates complex brain and MRI metrics into friendly, human explanations.
+                  </p>
+                  <ul className="spotlight-points">
+                    <li><strong>Multi-modal:</strong> Connects EEG waves with MRI scan results.</li>
+                    <li><strong>No jargon:</strong> Formats answers in clear, helpful points.</li>
+                    <li><strong>Stress relief:</strong> Explains physiology and calming techniques.</li>
+                  </ul>
                   <button className="feature-nav-btn" onClick={() => navigate("AI Insights")}>
-                    Consult CORTIA AI Assistant <ArrowRight size={14} />
+                    Consult AI Assistant <ArrowRight size={14} />
                   </button>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </section>
 
-      {/* 4. LIVE WORKSPACE DASHBOARD (WAVEFORM & JOURNEY) */}
+      {/* 4. LIVE WORKSPACE DASHBOARD */}
       <div className="overview-grid">
         <Card
           title="Live EEG signal"
