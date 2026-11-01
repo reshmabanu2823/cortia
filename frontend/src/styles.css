@@ -4675,16 +4675,73 @@ td small {
   color: #1A1715;
 }
 
-/* Hero Banner CORTIA Logo */
-.intro-banner-logo {
-  width: 145px;
-  height: 145px;
-  object-fit: contain;
-  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.45));
-  z-index: 1;
-  transition: transform 0.3s ease;
+/* Hero Banner CORTIA Logo & High-Contrast Light Theme */
+.intro-banner.compact-banner {
+  background: linear-gradient(135deg, #FFFFFF 0%, #FAF8F5 50%, #F5ECE0 100%) !important;
+  border: 1px solid #E6DFD4 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+  color: #24201D !important;
 }
 
+.intro-banner.compact-banner h2 {
+  color: #1F1A17 !important;
+}
+
+.intro-banner.compact-banner .eyebrow {
+  color: #C94040 !important;
+  font-weight: 700 !important;
+  letter-spacing: 1.5px !important;
+}
+
+.intro-banner.compact-banner p {
+  color: #5E564F !important;
+}
+
+.intro-banner.compact-banner .banner-primary-btn {
+  background: #C94040 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(201, 64, 64, 0.25);
+}
+
+.intro-banner.compact-banner .banner-primary-btn:hover {
+  background: #B33232 !important;
+}
+
+.intro-banner.compact-banner .banner-ghost-btn {
+  background: #FFFFFF !important;
+  color: #2D2722 !important;
+  border: 1px solid #D8D2C7 !important;
+}
+
+.intro-banner.compact-banner .banner-ghost-btn:hover {
+  background: #F3ECE1 !important;
+}
+
+.intro-banner.compact-banner .intro-art {
+  color: rgba(201, 64, 64, 0.3) !important;
+  background: radial-gradient(circle, rgba(201, 64, 64, 0.07) 0%, rgba(255, 255, 255, 0) 70%);
+}
+
+.intro-banner.compact-banner .art-ring {
+  border-color: rgba(201, 64, 64, 0.16) !important;
+}
+
+.intro-banner.compact-banner .art-ring:before,
+.intro-banner.compact-banner .art-ring:after {
+  border-color: rgba(201, 64, 64, 0.1) !important;
+}
+
+.intro-banner.compact-banner .brand-brain-img.banner-logo-highlight,
+.intro-banner-logo {
+  width: 140px !important;
+  height: 140px !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 10px 24px rgba(201, 64, 64, 0.25)) !important;
+  z-index: 2 !important;
+  transition: transform 0.3s ease !important;
+}
+
+.intro-banner.compact-banner .brand-brain-img.banner-logo-highlight:hover,
 .intro-banner-logo:hover {
-  transform: scale(1.05);
+  transform: scale(1.06) !important;
 }

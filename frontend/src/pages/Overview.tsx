@@ -120,9 +120,9 @@ export function OverviewPage({
         </div>
         <div className="intro-art" aria-hidden="true">
           <img
+            alt="CORTIA"
+            className="brand-brain-img banner-logo-highlight"
             src="/cortia/cortia-brain.webp"
-            alt="CORTIA Brain Logo"
-            className="intro-banner-logo"
           />
           <span className="art-ring" />
         </div>
