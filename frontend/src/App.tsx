@@ -15,7 +15,6 @@ import {
   Activity,
   ArrowRight,
   BarChart3,
-  Brain,
   Check,
   ChevronRight,
   CircleHelp,
@@ -161,7 +160,11 @@ function Auth({ onLogin, onBack }: { onLogin: (u: User) => void; onBack?: () => 
             <br />A thoughtful approach to brain activity.
           </p>
           <div className="brain-art" aria-hidden="true">
-            <Brain size={240} strokeWidth={0.55} />
+            <img
+              src="/cortia/cortia-brain.webp"
+              alt="CORTIA Brain"
+              className="auth-brain-img"
+            />
             <span className="orbit one" />
             <span className="orbit two" />
             <span className="art-label">CORTIA / RESEARCH WORKSPACE</span>
