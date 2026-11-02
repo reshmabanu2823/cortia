@@ -1,11 +1,8 @@
-import { useState, useRef, useEffect } from "react";
 import {
   ScanLine,
   Activity,
   ArrowRight,
-  RotateCcw,
   BookOpen,
-  ChevronRight,
   ShieldCheck,
 } from "lucide-react";
 
@@ -15,36 +12,6 @@ interface LandingProps {
 }
 
 export function LandingPage({ onEnter, authenticated }: LandingProps) {
-  const [introDone, setIntroDone] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    // If user prefers reduced motion or video fails, reveal immediately
-    const timer = setTimeout(() => {
-      setIntroDone(true);
-    }, 4500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  function handleVideoEnded() {
-    setIntroDone(true);
-  }
-
-  function handleSkip() {
-    setIntroDone(true);
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
-  }
-
-  function handleReplay() {
-    setIntroDone(false);
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      void videoRef.current.play();
-    }
-  }
-
   return (
     <div className="landing-root">
       {/* Top Header Controls */}
@@ -61,17 +28,6 @@ export function LandingPage({ onEnter, authenticated }: LandingProps) {
         </div>
 
         <div className="landing-nav-actions">
-          {!introDone && (
-            <button
-              type="button"
-              onClick={handleSkip}
-              className="landing-skip-btn"
-            >
-              Skip Intro
-              <ChevronRight size={14} />
-            </button>
-          )}
-
           <button
             type="button"
             onClick={() => onEnter()}
@@ -85,32 +41,8 @@ export function LandingPage({ onEnter, authenticated }: LandingProps) {
 
       {/* Main Content Container */}
       <main className="landing-container">
-        {/* Reveal Stage */}
-        {!introDone ? (
-          <div className="landing-stage">
-            <div className="landing-video-frame">
-              <video
-                ref={videoRef}
-                autoPlay
-                muted
-                playsInline
-                preload="auto"
-                poster="/cortia/cortia-poster.jpg"
-                onEnded={handleVideoEnded}
-                className="landing-video"
-              >
-                <source src="/cortia/cortia-reveal.mp4" type="video/mp4" />
-                <source src="/cortia/cortia-reveal.webm" type="video/webm" />
-              </video>
-            </div>
-            <div className="landing-hairline-track">
-              <span className="landing-hairline-bar" />
-            </div>
-          </div>
-        ) : null}
-
-        {/* Blooming Brand Lockup */}
-        <div className={`landing-brand-hero ${introDone ? "bloomed" : "hidden-init"}`}>
+        {/* Blooming Brand Lockup & Hero */}
+        <div className="landing-brand-hero bloomed">
           <div className="landing-lockup-wrapper" role="img" aria-label="Cortia">
             <img
               src="/cortia/cortia-lockup.png"
@@ -124,7 +56,7 @@ export function LandingPage({ onEnter, authenticated }: LandingProps) {
               Neural Intelligence &amp; Clinical Workstation
             </h1>
             <p className="landing-description">
-              A local-first research platform integrating deep learning MRI brain
+              A local-first research platform integrating deep learning cranial MRI
               tumor classification with Grad-CAM attention saliency and real-time single-channel EEG biopotential telemetry.
             </p>
           </div>
@@ -224,16 +156,6 @@ export function LandingPage({ onEnter, authenticated }: LandingProps) {
             <BookOpen size={13} />
             API Docs
           </a>
-          {introDone && (
-            <button
-              type="button"
-              onClick={handleReplay}
-              className="landing-link-btn"
-            >
-              <RotateCcw size={13} />
-              Replay Intro
-            </button>
-          )}
         </div>
       </footer>
     </div>
