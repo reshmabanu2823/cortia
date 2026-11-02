@@ -32,8 +32,8 @@ def current_user(request: Request, db=Depends(get_db)):
     return user
 
 class Credentials(BaseModel):
-    username: str = Field(min_length=1, max_length=128)
-    password: str = Field(min_length=1, max_length=128)
+    username: str = Field(min_length=3, max_length=128)
+    password: str = Field(min_length=8, max_length=128)
 
 
 def public(user):

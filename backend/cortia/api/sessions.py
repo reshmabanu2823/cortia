@@ -1,5 +1,6 @@
 import hashlib
 import json
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
@@ -7,8 +8,11 @@ from ..auth import get_db, current_user
 from ..models import Recording, Segment, Baseline, Anomaly, Report
 from ..analytics.baseline import summarize, compare
 from ..analytics.anomalies import deviation_events
+from ..reports.builder import build_report_data
+from ..reports.pdf import generate_pdf
+from ..reports.docx import generate_docx
 
-router = APIRouter(prefix='/api', tags=['Recordings and baselines'])
+router = APIRouter(prefix='/api', tags=['Recordings, baselines and reports'])
 
 def recording(db, sid, user):
     row = db.query(Recording).filter_by(id=sid, user_id=user.id).first()
@@ -97,14 +101,136 @@ def raw(sid:str, request:Request, db=Depends(get_db), user=Depends(current_user)
     return FileResponse(path, media_type='text/csv', filename=f'cortia-{sid}-raw.csv')
 
 @router.get('/sessions/{sid}/report')
-def report(sid:str, db=Depends(get_db), user=Depends(current_user)):
-    row = recording(db,sid,user)
-    data = dict(product='CORTIA', category='measured and calculated research data', session=session_data(row),
-                baseline=baseline_comparison(db,row), limitations='Research support only. No diagnosis. Signal quality heuristics are not clinically validated.')
-    body = json.dumps(data, indent=2, allow_nan=False)
-    db.add(Report(session_id=sid,format='json',digest=hashlib.sha256(body.encode()).hexdigest()))
-    db.commit()
-    return Response(body, media_type='application/json',headers={'Content-Disposition':f'attachment; filename="cortia-{sid}.json"'})
+def report(
+    sid: str,
+    request: Request,
+    format: str = Query('json', pattern='^(json|pdf|docx)$'),
+    db=Depends(get_db),
+    user=Depends(current_user),
+):
+    row = recording(db, sid, user)
+
+    # 1. Backward-compatible JSON export
+    if format == 'json':
+        data = dict(
+            product='CORTIA',
+            category='measured and calculated research data',
+            session=session_data(row),
+            baseline=baseline_comparison(db, row),
+            limitations='Research support only. No diagnosis. Signal quality heuristics are not clinically validated.',
+        )
+        body = json.dumps(data, indent=2, allow_nan=False)
+        db.add(Report(session_id=sid, format='json', digest=hashlib.sha256(body.encode()).hexdigest()))
+        db.commit()
+        return Response(
+            body,
+            media_type='application/json',
+            headers={'Content-Disposition': f'attachment; filename="cortia-{sid}.json"'},
+        )
+
+    # 2. Multimodal Clinical Research Report Data
+    report_data = build_report_data(db, user, request.app.state.settings, session_id=sid)
+
+    # 3. PDF Format
+    if format == 'pdf':
+        pdf_bytes = generate_pdf(report_data)
+        digest = hashlib.sha256(pdf_bytes).hexdigest()
+        db.add(Report(session_id=sid, format='pdf', digest=digest))
+        db.commit()
+        return Response(
+            pdf_bytes,
+            media_type='application/pdf',
+            headers={
+                'Content-Disposition': f'attachment; filename="cortia-{sid}-brain-health-report.pdf"',
+                'Cache-Control': 'no-store',
+            },
+        )
+
+    # 4. DOCX Format
+    if format == 'docx':
+        docx_bytes = generate_docx(report_data)
+        digest = hashlib.sha256(docx_bytes).hexdigest()
+        db.add(Report(session_id=sid, format='docx', digest=digest))
+        db.commit()
+        return Response(
+            docx_bytes,
+            media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            headers={
+                'Content-Disposition': f'attachment; filename="cortia-{sid}-brain-health-report.docx"',
+                'Cache-Control': 'no-store',
+            },
+        )
+
+    raise HTTPException(400, f'Unsupported report format: {format}')
+
+
+@router.get('/reports/brain-health')
+def brain_health_report(
+    request: Request,
+    format: str = Query('pdf', pattern='^(json|pdf|docx)$'),
+    session_id: Optional[str] = Query(None),
+    db=Depends(get_db),
+    user=Depends(current_user),
+):
+    """Generate overall Brain Health Monitoring Report for the user's latest session or specified session."""
+    try:
+        report_data = build_report_data(db, user, request.app.state.settings, session_id=session_id)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc))
+
+    focal_sid = report_data.get('eeg_analysis', {}).get('session_id')
+
+    if format == 'json':
+        # Serialize report data with clean json representation
+        clean_json_data = {k: v for k, v in report_data.items() if k not in ('eeg_analysis', 'historical_analysis')}
+        clean_json_data['eeg_analysis'] = {
+            k: v for k, v in report_data['eeg_analysis'].items() if k != 'chart_png_bytes'
+        }
+        clean_json_data['mri_analysis'] = {
+            k: v for k, v in report_data['mri_analysis'].items() if k not in ('gradcam_png_bytes', 'raw_scan_png_bytes')
+        }
+        clean_json_data['historical_analysis'] = {
+            k: v for k, v in report_data['historical_analysis'].items() if k != 'trend_chart_bytes'
+        }
+        body = json.dumps(clean_json_data, indent=2, default=str)
+        if focal_sid:
+            db.add(Report(session_id=focal_sid, format='json', digest=hashlib.sha256(body.encode()).hexdigest()))
+            db.commit()
+        return Response(
+            body,
+            media_type='application/json',
+            headers={'Content-Disposition': f'attachment; filename="cortia-{report_data["report_id"]}.json"'},
+        )
+
+    if format == 'pdf':
+        pdf_bytes = generate_pdf(report_data)
+        if focal_sid:
+            db.add(Report(session_id=focal_sid, format='pdf', digest=hashlib.sha256(pdf_bytes).hexdigest()))
+            db.commit()
+        return Response(
+            pdf_bytes,
+            media_type='application/pdf',
+            headers={
+                'Content-Disposition': f'attachment; filename="cortia-{report_data["report_id"]}.pdf"',
+                'Cache-Control': 'no-store',
+            },
+        )
+
+    if format == 'docx':
+        docx_bytes = generate_docx(report_data)
+        if focal_sid:
+            db.add(Report(session_id=focal_sid, format='docx', digest=hashlib.sha256(docx_bytes).hexdigest()))
+            db.commit()
+        return Response(
+            docx_bytes,
+            media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            headers={
+                'Content-Disposition': f'attachment; filename="cortia-{report_data["report_id"]}.docx"',
+                'Cache-Control': 'no-store',
+            },
+        )
+
+    raise HTTPException(400, f'Unsupported report format: {format}')
 
 class BaselineRequest(BaseModel):
     session_ids: list[str] = Field(min_length=3, max_length=200)
