@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Sparkles,
   Loader2,
@@ -25,6 +25,7 @@ import {
 import type { Recording, Insight, Action } from "../types";
 import { api, post, date } from "../api";
 import { Card, Empty, Badge, Note } from "../ui";
+import "./insights.css";
 
 interface ChatMessage {
   id?: string;
@@ -285,6 +286,35 @@ function FormattedContent({ content }: { content: string }) {
   );
 }
 
+function SmoothResponse({ content, animate, onProgress }: { content: string; animate: boolean; onProgress: () => void }) {
+  const [visible, setVisible] = useState(animate ? 0 : content.length);
+  useEffect(() => {
+    if (!animate || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setVisible(content.length);
+      return;
+    }
+    setVisible(0);
+    const boundaries = Array.from(content.matchAll(/\S+\s*/g), match => match.index! + match[0].length);
+    const duration = Math.min(6000, Math.max(450, boundaries.length * 35));
+    const started = performance.now();
+    let frame = 0;
+    let previous = -1;
+    const tick = (now: number) => {
+      const fraction = Math.min(1, (now - started) / duration);
+      const index = Math.min(boundaries.length - 1, Math.floor(fraction * boundaries.length));
+      const next = fraction === 1 ? content.length : boundaries[index] ?? content.length;
+      if (next !== previous) { setVisible(next); previous = next; }
+      if (fraction < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [content, animate]);
+  useEffect(() => { onProgress(); }, [visible, onProgress]);
+  return <div className={visible < content.length ? "response-revealing" : "response-complete"} aria-busy={visible < content.length}>
+    <FormattedContent content={content.slice(0, visible)} />
+  </div>;
+}
+
 const HEALTH_PROMPTS = [
   {
     category: "Stress & Mental Health",
@@ -337,6 +367,20 @@ export function InsightsPage({
   );
   const [keySaved, setKeySaved] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
+  const threadRef = useRef<HTMLDivElement>(null);
+  const followResponse = useRef(true);
+  const followConversation = useCallback(() => {
+    const thread = threadRef.current;
+    if (!thread || !followResponse.current) return;
+    thread.scrollTo({ top: thread.scrollHeight, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+  }, []);
+  useEffect(() => {
+    const content = threadRef.current?.querySelector('.chat-messages-list');
+    if (!content) return;
+    const observer = new ResizeObserver(followConversation);
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, [messages.length, followConversation]);
 
   // Health Tool States
   const [stressScore, setStressScore] = useState(10);
@@ -381,12 +425,13 @@ export function InsightsPage({
 
   // Scroll to bottom on new message
   useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, chatBusy]);
+    followConversation();
+  }, [messages, chatBusy, followConversation]);
 
   async function handleSendMessage(textToSend?: string) {
     const text = (textToSend || inputQuery).trim();
     if (!text || chatBusy) return;
+    followResponse.current = true;
 
     const userMsg: ChatMessage = { role: "user", content: text };
     setMessages((prev) => [...prev, userMsg]);
@@ -480,15 +525,14 @@ export function InsightsPage({
   }
 
   return (
-    <div className="insights-view">
+    <div className={`insights-view ${activeTab === "assistant" ? "assistant-mode" : ""}`}>
       {/* Top Banner */}
       <div className="insight-banner">
         <Sparkles size={25} />
         <div>
-          <h2>CORTIA Medical &amp; Brain Health Intelligence</h2>
+          <h2>CORTIA Assistant</h2>
           <p>
-            Expert neuro-oncology, clinical neurology, stress physiology &amp; mental health consultation powered by{" "}
-            <strong>{aiConfig?.model || "Gemini Flash"}</strong>, grounded in peer-reviewed neuroscience literature.
+            Understand your EEG recordings, MRI results, and brain health questions.
           </p>
         </div>
       </div>
@@ -501,7 +545,7 @@ export function InsightsPage({
           onClick={() => setActiveTab("assistant")}
         >
           <Bot size={16} />
-          Gemini Medical &amp; Health Assistant
+          Conversation
         </button>
         <button
           type="button"
@@ -509,7 +553,7 @@ export function InsightsPage({
           onClick={() => setActiveTab("explanations")}
         >
           <BookOpen size={16} />
-          EEG Evidence Explanations
+          Recording insights
         </button>
       </div>
 
@@ -747,13 +791,14 @@ export function InsightsPage({
 
           {/* Assistant Header Card */}
           <Card
-            title="Ask CORTIA AI Assistant"
-            subtitle="Specialized in brain MRI tumor classification, Grad-CAM attention saliency, clinical neurology, and mental health"
+            className="conversation-card"
+            title="Your conversation"
+            subtitle="Ask a question or explore your latest results."
             action={
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                 <span className="gemini-badge">
                   <Sparkles size={13} />
-                  {selectedModel} · {aiConfig?.configured || customKey ? "Active" : "Grounded"}
+                  {aiConfig?.configured || customKey ? "Connected" : "Evidence mode"}
                 </span>
                 <button
                   type="button"
@@ -818,20 +863,22 @@ export function InsightsPage({
             )}
 
             {/* Conversation Window */}
-            <div className="chat-thread-container">
+            <div className="chat-thread-container" ref={threadRef} onScroll={() => {
+              const thread = threadRef.current;
+              if (thread && !followResponse.current && thread.scrollHeight - thread.scrollTop - thread.clientHeight < 96) followResponse.current = true;
+            }} onWheel={(event) => { if (event.deltaY < 0) followResponse.current = false; }}>
               {messages.length === 0 ? (
                 <div className="chat-welcome">
                   <div className="chat-welcome-icon">
-                    <Brain size={32} />
+                    <img src="/cortia/cortia-lockup.png" alt="CORTIA" />
                   </div>
-                  <h3>How can CORTIA Medical &amp; Brain Health AI assist you?</h3>
+                  <h3>What would you like to understand?</h3>
                   <p>
-                    Ask clinical questions regarding brain tumor classes (Glioma, Meningioma, Pituitary, Normal),
-                    interpretations of Grad-CAM attention maps, EEG biopotentials, stress reduction, or mental health.
+                    Explore a recording, review an MRI result, or ask a brain health question.
                   </p>
 
                   <div className="starter-prompts-grid">
-                    {HEALTH_PROMPTS.map((item, idx) => (
+                    {HEALTH_PROMPTS.slice(0, 4).map((item, idx) => (
                       <button
                         key={idx}
                         type="button"
@@ -855,7 +902,7 @@ export function InsightsPage({
                       className={`chat-bubble-row ${m.role === "user" ? "user-row" : "asst-row"}`}
                     >
                       <div className="bubble-avatar">
-                        {m.role === "user" ? <UserIcon size={16} /> : <Bot size={16} />}
+                        {m.role === "user" ? <UserIcon size={16} /> : <img src="/cortia/cortia-brain.webp" alt="CORTIA" />}
                       </div>
                       <div className="bubble-content">
                         <div className="bubble-header">
@@ -878,7 +925,7 @@ export function InsightsPage({
 
                         <div className={`bubble-text ${m.role === "assistant" ? "asst-bubble-body" : "user-bubble-body"}`}>
                           {m.role === "assistant" ? (
-                            <FormattedContent content={m.content} />
+                            <SmoothResponse content={m.content} animate={idx === messages.length - 1 && m.provider !== "System Error" && !m.red_flags?.has_red_flags} onProgress={followConversation} />
                           ) : (
                             m.content
                           )}
@@ -905,12 +952,12 @@ export function InsightsPage({
                   {chatBusy && (
                     <div className="chat-bubble-row asst-row">
                       <div className="bubble-avatar">
-                        <Bot size={16} />
+                        <img src="/cortia/cortia-brain.webp" alt="CORTIA" />
                       </div>
                       <div className="bubble-content">
                         <div className="bubble-thinking">
                           <Loader2 className="spin" size={16} />
-                          <span>Gemini 3.8 Flash is synthesizing clinical consultation…</span>
+                          <span>CORTIA is preparing a response…</span>
                         </div>
                       </div>
                     </div>
@@ -931,7 +978,8 @@ export function InsightsPage({
             >
               <input
                 type="text"
-                placeholder="Ask about brain tumors, Grad-CAM, EEG bands, stress relief, or neurological health…"
+                aria-label="Message CORTIA"
+                placeholder="Message CORTIA…"
                 value={inputQuery}
                 onChange={(e) => setInputQuery(e.target.value)}
                 disabled={chatBusy}

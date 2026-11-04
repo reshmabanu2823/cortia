@@ -16,6 +16,8 @@ export function HistoryPage({
     [right, setRight] = useState("");
   const a = sessions.find((s) => s.id === left),
     b = sessions.find((s) => s.id === right);
+  const [reportId, setReportId] = useState("");
+  const reportSession = sessions.find(s => s.id === reportId) || sessions.find(s => s.state === "completed" && s.config.source !== "demo") || sessions[0];
   const valid = sessions.filter((s) => s.valid_windows > 0);
   return (
     <>
@@ -63,7 +65,7 @@ export function HistoryPage({
                 PRIVATE • RESEARCH USE ONLY
               </span>
               <span style={{ fontSize: "12px", color: "#8A8580" }}>
-                Multi-Modal Diagnostic Research Report
+                EEG recording analysis
               </span>
             </div>
             <h2
@@ -75,7 +77,7 @@ export function HistoryPage({
                 fontFamily: "Playfair Display, serif, system-ui",
               }}
             >
-              Brain Health Monitoring Reports
+              EEG Analysis Reports
             </h2>
             <p
               style={{
@@ -86,12 +88,17 @@ export function HistoryPage({
                 lineHeight: "1.5",
               }}
             >
-              Generate structured, publication-grade research reports uniting focal
-              EEG spectral distribution, baseline z-scores, deep learning cranial
-              MRI classifications, Grad-CAM attention heatmaps, and longitudinal trend analysis.
+              Choose a recording below. Its report explains the detected signal in simple words and includes the exact numbers. MRI reports stay separate.
             </p>
           </div>
 
+          <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+            Recording to download
+            <select aria-label="Recording to download" value={reportSession?.id || ""} onChange={event => setReportId(event.target.value)}>
+              {!sessions.length && <option value="">No recordings available</option>}
+              {sessions.map(session => <option key={session.id} value={session.id}>{date(session.started_at)} · {session.context.task}{session.config.source === "demo" ? " · Demo" : ""}</option>)}
+            </select>
+          </label>
           <div
             style={{
               display: "flex",
@@ -101,8 +108,8 @@ export function HistoryPage({
             }}
           >
             <a
-              href="/api/reports/brain-health?format=pdf"
-              download="cortia-brain-health-report.pdf"
+              href={reportSession ? `/api/sessions/${reportSession.id}/report?format=pdf` : undefined}
+              download={`cortia-eeg-${reportSession?.id || "recording"}.pdf`}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -123,8 +130,8 @@ export function HistoryPage({
             </a>
 
             <a
-              href="/api/reports/brain-health?format=docx"
-              download="cortia-brain-health-report.docx"
+              href={reportSession ? `/api/sessions/${reportSession.id}/report?format=docx` : undefined}
+              download={`cortia-eeg-${reportSession?.id || "recording"}.docx`}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -145,8 +152,8 @@ export function HistoryPage({
             </a>
 
             <a
-              href="/api/reports/brain-health?format=json"
-              download="cortia-brain-health-report.json"
+              href={reportSession ? `/api/sessions/${reportSession.id}/report?format=json` : undefined}
+              download={`cortia-eeg-${reportSession?.id || "recording"}.json`}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -189,7 +196,7 @@ export function HistoryPage({
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <span style={{ color: "#9E2A4B", fontSize: "14px" }}>•</span>
-            <span>Embedded MRI scans & Grad-CAM attention saliency</span>
+            <span>EEG signal quality and recording context</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <span style={{ color: "#9E2A4B", fontSize: "14px" }}>•</span>
@@ -228,6 +235,7 @@ export function HistoryPage({
                     </td>
                     <td>
                       {s.context.task} · {s.context.eyes}
+                      {s.config.source === "demo" && <small>Demo</small>}
                       <small>{s.context.montage}</small>
                     </td>
                     <td>

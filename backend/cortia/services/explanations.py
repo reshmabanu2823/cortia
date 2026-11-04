@@ -3,6 +3,7 @@ import hashlib
 import json
 import re
 import httpx
+from .eeg_states import signal_state
 
 
 def evidence(session, baseline):
@@ -46,6 +47,12 @@ def human_friendly_explanation(session, baseline=None):
     task = context.get('task', 'rest')
     montage = context.get('montage', 'forehead')
     features = session.get('features', {})
+    pattern = signal_state(session)
+    if not pattern['available']:
+        return dict(state_title=pattern['label'], state_badge='Interpretation unavailable', state_badge_color='warning',
+                    summary=pattern['explanation'], band_breakdown=[], tbr_score=None,
+                    signal_clarity=f'{valid} usable / {total} checked sections',
+                    what_it_means=[pattern['sleep_deprivation'], pattern['limitation']])
 
     if not valid:
         return {
@@ -85,7 +92,7 @@ def human_friendly_explanation(session, baseline=None):
 
     dominant = max(bands, key=bands.get)
     clean_pct = round((valid / total * 100), 1) if total > 0 else 0
-    tbr = features.get('tbr')
+    tbr = features.get('theta_beta', features.get('tbr'))
     if tbr is None and beta_pct > 0:
         tbr = round(theta_pct / beta_pct, 2)
 
@@ -180,10 +187,10 @@ def human_friendly_explanation(session, baseline=None):
         quality_msg = f'{clean_pct}% Steady Contact · Blinks or motion detected'
 
     return {
-        'state_title': state_title,
-        'state_badge': state_badge,
+        'state_title': pattern['label'],
+        'state_badge': pattern['label'],
         'state_badge_color': state_badge_color,
-        'summary': core_meaning,
+        'summary': pattern['explanation'] + ' ' + pattern['sleep_deprivation'],
         'dominant_band': dominant.title(),
         'clean_pct': clean_pct,
         'valid_windows': valid,
@@ -192,7 +199,9 @@ def human_friendly_explanation(session, baseline=None):
         'eyes': eyes,
         'task': task,
         'band_breakdown': band_cards,
-        'alertness_label': alertness_label,
+        'alertness_label': pattern.get('ratio_hint', 'No reliable ratio-based estimate'),
+        'tbr_score': pattern.get('theta_beta_ratio'),
+        'what_it_means': pattern['evidence'] + [pattern['limitation']],
         'signal_clarity': quality_msg,
         'tip': 'For the steadiest reading, sit comfortably and relax your forehead muscles.' if clean_pct < 60 else 'Great recording with steady sensor contact.'
     }

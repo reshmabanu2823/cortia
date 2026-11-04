@@ -85,10 +85,10 @@ def test_build_report_data_structures(tmp_path):
         assert report_dict["user"]["username"] == "report_user"
         assert report_dict["eeg_analysis"]["available"] is True
         assert report_dict["eeg_analysis"]["bands"]["Alpha"]["rel"] == 0.40
-        assert report_dict["mri_analysis"]["available"] is True
-        assert report_dict["mri_analysis"]["display_label"] == "No Tumor Detected"
+        assert report_dict["mri_analysis"]["available"] is False
+        assert report_dict["report_title"] == "EEG Signal Analysis Report"
         assert len(report_dict["executive_summary"]["key_observations"]) >= 2
-        assert len(report_dict["interpretations"]) >= 5
+        assert len(report_dict["interpretations"]) == 4
 
 
 def test_pdf_generation_content_and_watermark(tmp_path):
@@ -132,8 +132,8 @@ def test_docx_generation_structure_and_watermark(tmp_path):
         # Validate that it is a valid zip package containing word/document.xml
         zf = zipfile.ZipFile(io.BytesIO(docx_bytes))
         doc_xml = zf.read("word/document.xml").decode("utf-8")
-        assert "Brain Health Monitoring Report" in doc_xml
-        assert "Executive Summary" in doc_xml
+        assert "EEG Signal Analysis Report" in doc_xml
+        assert "Your recording in simple words" in doc_xml
 
         # Check watermark presence in header
         headers = [f for f in zf.namelist() if f.startswith("word/header")]
@@ -167,7 +167,7 @@ def test_api_session_report_formats(tmp_path):
         assert r_pdf.status_code == 200
         assert r_pdf.headers["content-type"] == "application/pdf"
         assert "attachment" in r_pdf.headers["content-disposition"]
-        assert f"cortia-{sid}-brain-health-report.pdf" in r_pdf.headers["content-disposition"]
+        assert f"cortia-{sid}-eeg-analysis.pdf" in r_pdf.headers["content-disposition"]
         assert r_pdf.content.startswith(b"%PDF-")
 
         # 3. DOCX
@@ -175,7 +175,7 @@ def test_api_session_report_formats(tmp_path):
         assert r_docx.status_code == 200
         assert "openxmlformats" in r_docx.headers["content-type"]
         assert "attachment" in r_docx.headers["content-disposition"]
-        assert f"cortia-{sid}-brain-health-report.docx" in r_docx.headers["content-disposition"]
+        assert f"cortia-{sid}-eeg-analysis.docx" in r_docx.headers["content-disposition"]
         assert len(r_docx.content) > 1000
 
         # Check DB audit records in Report table

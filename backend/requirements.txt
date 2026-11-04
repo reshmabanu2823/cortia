@@ -10,5 +10,7 @@ python-multipart>=0.0.20,<1
 httpx>=0.28,<1
 scikit-learn>=1.6,<2
 pytest>=8,<10
+reportlab>=4,<5
+python-docx>=1.1,<2
 tensorflow-cpu>=2.21,<2.22
 httpx2>=2,<3

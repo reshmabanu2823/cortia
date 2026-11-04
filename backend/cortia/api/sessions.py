@@ -141,7 +141,7 @@ def report(
             pdf_bytes,
             media_type='application/pdf',
             headers={
-                'Content-Disposition': f'attachment; filename="cortia-{sid}-brain-health-report.pdf"',
+                'Content-Disposition': f'attachment; filename="cortia-{sid}-eeg-analysis.pdf"',
                 'Cache-Control': 'no-store',
             },
         )
@@ -156,7 +156,7 @@ def report(
             docx_bytes,
             media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             headers={
-                'Content-Disposition': f'attachment; filename="cortia-{sid}-brain-health-report.docx"',
+                'Content-Disposition': f'attachment; filename="cortia-{sid}-eeg-analysis.docx"',
                 'Cache-Control': 'no-store',
             },
         )
@@ -248,9 +248,15 @@ def create_baseline(data:BaselineRequest,db=Depends(get_db),user=Depends(current
         raise HTTPException(422,'Each session must be completed and contain at least three usable eight-second windows')
     # Free-form notes are intentionally not part of recording comparability.
     context = {k:v for k,v in rows[0].context.items() if k != 'notes'}
-    if any({k:v for k,v in r.context.items() if k != 'notes'} != context or r.config != rows[0].config for r in rows):
+    demo_cohort = all(r.config.get('source') == 'demo' for r in rows)
+    if demo_cohort:
+        context = dict(task='Demo comparison', eyes='mixed', montage=rows[0].context.get('montage', 'mixed'))
+    if any((not demo_cohort and {k:v for k,v in r.context.items() if k != 'notes'} != context) or r.config != rows[0].config for r in rows):
         raise HTTPException(422,'Sessions must share eyes, task, montage and acquisition configuration')
-    statistics = summarize([dict(id=r.id,features=r.features) for r in rows])
+    try:
+        statistics = summarize([dict(id=r.id,features=r.features) for r in rows])
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
     baseline = Baseline(user_id=user.id,session_ids=data.session_ids,context=context,config=rows[0].config,statistics=statistics)
     db.add(baseline)
     db.commit()

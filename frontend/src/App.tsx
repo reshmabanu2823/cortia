@@ -9,6 +9,7 @@ import { MRIPage } from "./pages/MRI";
 import { HistoryPage } from "./pages/History";
 import { InsightsPage } from "./pages/Insights";
 import { OverviewPage } from "./pages/Overview";
+import { NotificationsPage } from "./pages/Notifications";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
@@ -52,7 +53,8 @@ type Page =
   | "Baselines"
   | "MRI Analysis"
   | "History & reports"
-  | "AI Insights";
+  | "AI Insights"
+  | "Notifications";
 const nav = [
   { name: "Overview", icon: LayoutDashboard },
   { name: "Live EEG", icon: Activity },
@@ -70,6 +72,7 @@ const descriptions: Record<Page, string> = {
   "MRI Analysis": "A separate perspective, through image classification.",
   "History & reports": "Your recordings, in context and over time.",
   "AI Insights": "Understand what your measurements can tell you.",
+  Notifications: "Your recent workspace activity.",
 };
 
 export default function App() {
@@ -192,7 +195,7 @@ function Auth({ onLogin, onBack }: { onLogin: (u: User) => void; onBack?: () => 
         <p>
           {register
             ? "Create an account on this computer."
-            : "Sign in to your local monitoring workspace."}
+            : "Sign in with your username. No password required."}
         </p>
         <form onSubmit={submit}>
           <label>
@@ -200,24 +203,24 @@ function Auth({ onLogin, onBack }: { onLogin: (u: User) => void; onBack?: () => 
             <input
               name="username"
               required
-              minLength={1}
+              minLength={3}
               maxLength={128}
               autoComplete="username"
               placeholder="Your username or email"
             />
           </label>
-          <label>
+          {register && <label>
             Password
             <input
               name="password"
               type="password"
               required
-              minLength={1}
+              minLength={8}
               maxLength={128}
               autoComplete={register ? "new-password" : "current-password"}
               placeholder="Enter your password"
             />
-          </label>
+          </label>}
           {error && (
             <div className="error" role="alert">
               {error}
@@ -544,6 +547,7 @@ function Workspace({
                   sessions={sessions}
                   baselines={baselines}
                   last={last}
+                  mriAvailable={mris.length > 0}
                   navigate={navigate}
                   choose={choose}
                 />
@@ -804,6 +808,7 @@ function Workspace({
               {page === "AI Insights" && (
                 <InsightsPage sessions={sessions} action={action} busy={busy} />
               )}
+              {page === "Notifications" && <NotificationsPage sessions={sessions} mris={mris} baselines={baselines} />}
             </>
           )}
           <footer className="page-footer">

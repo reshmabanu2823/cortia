@@ -2,12 +2,13 @@ import hashlib
 import io
 import json
 from pathlib import Path
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, Query
 from fastapi.responses import FileResponse, Response
 from ..auth import current_user, get_db
 from ..db import uid
 from ..models import MRIUpload, MRIPrediction
 from ..mri.service import validate_image
+from ..reports import build_report_data, generate_pdf, generate_docx
 
 router = APIRouter(prefix='/api/mri',tags=['MRI classifier'])
 
@@ -59,10 +60,18 @@ def image(mid:str,request:Request,user=Depends(current_user),db=Depends(get_db))
     return FileResponse(path,media_type='image/png',headers={'Cache-Control':'no-store'})
 
 @router.get('/{mid}/report')
-def report(mid:str,user=Depends(current_user),db=Depends(get_db)):
+def report(mid:str, request:Request, format:str=Query('json', pattern='^(json|pdf|docx)$'), user=Depends(current_user),db=Depends(get_db)):
     record = db.query(MRIUpload).filter_by(id=mid,user_id=user.id).first()
     if record is None:
         raise HTTPException(404,'MRI upload not found')
+    if format in ('pdf', 'docx'):
+        data = build_report_data(db, user, request.app.state.settings, mri_id=mid, report_type="mri")
+        body = generate_pdf(data) if format == 'pdf' else generate_docx(data)
+        media_type = 'application/pdf' if format == 'pdf' else 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        return Response(body, media_type=media_type, headers={
+            'Content-Disposition': f'attachment; filename="cortia-mri-{mid}-analysis.{format}"',
+            'Cache-Control': 'no-store',
+        })
     result = db.get(MRIPrediction,mid).result
     return Response(json.dumps(dict(id=mid,created_at=record.created_at,source_sha256=record.sha256,result=result),indent=2),
                     media_type='application/json',headers={'Content-Disposition':f'attachment; filename="cortia-mri-{mid}.json"'})

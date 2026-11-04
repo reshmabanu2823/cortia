@@ -3,7 +3,6 @@ import secrets
 import time
 from collections import defaultdict, deque
 from argon2 import PasswordHasher
-from argon2.exceptions import VerificationError, InvalidHashError
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.exc import IntegrityError
@@ -11,7 +10,6 @@ from .models import User, AuthToken
 
 router = APIRouter(prefix='/api/auth', tags=['Authentication'])
 passwords = PasswordHasher(time_cost=3, memory_cost=65536, parallelism=2)
-DUMMY_HASH = passwords.hash('constant-non-account-verification-password')
 
 def get_db(request: Request):
     with request.app.state.db() as db:
@@ -34,6 +32,10 @@ def current_user(request: Request, db=Depends(get_db)):
 class Credentials(BaseModel):
     username: str = Field(min_length=3, max_length=128)
     password: str = Field(min_length=8, max_length=128)
+
+
+class LoginCredentials(BaseModel):
+    username: str = Field(min_length=3, max_length=128)
 
 
 def public(user):
@@ -74,15 +76,11 @@ def register(data: Credentials, request: Request, response: Response, db=Depends
     return public(user)
 
 @router.post('/login')
-def login(data: Credentials, request: Request, response: Response, db=Depends(get_db)):
+def login(data: LoginCredentials, request: Request, response: Response, db=Depends(get_db)):
     throttle(request)
     user = db.query(User).filter_by(username=data.username.lower()).first()
-    try:
-        valid = passwords.verify(user.password_hash if user else DUMMY_HASH, data.password)
-    except (VerificationError, InvalidHashError):
-        valid = False
-    if not user or not valid:
-        raise HTTPException(401, 'Invalid username or password')
+    if not user:
+        raise HTTPException(401, 'Username not found. Create an account first.')
     issue(db, user, response, request.app.state.settings.secure_cookie)
     return public(user)
 

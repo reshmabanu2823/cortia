@@ -10,6 +10,7 @@ import {
 import type { MRI, Action } from "../types";
 import { api, date, number, title } from "../api";
 import { Card, Empty, Badge, Note } from "../ui";
+import { ReportDownloads } from "../ReportDownloads";
 
 export function MRIPage({
   mris,
@@ -147,6 +148,7 @@ export function MRIPage({
           title="Classification result"
           subtitle={`${date(result.created_at)} · model prediction`}
           action={
+            <><ReportDownloads kind="mri" id={result.id} />
             <a
               className="secondary"
               href={`/api/mri/${result.id}/report`}
@@ -154,7 +156,7 @@ export function MRIPage({
             >
               <Download size={15} />
               Export
-            </a>
+            </a></>
           }
         >
           <div className="mri-result">

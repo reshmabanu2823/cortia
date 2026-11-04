@@ -27,6 +27,24 @@ def test_auth_empty_states_and_logout(client):
     assert client.get('/api/auth/me').status_code == 401
 
 
+def test_login_after_logout_accepts_any_or_no_password(client):
+    user = signup(client)
+    for payload in ({'username': 'person', 'password': 'x'}, {'username': 'person'}):
+        old_token = client.cookies.get('cortia_session')
+        assert client.post('/api/auth/logout').status_code == 200
+        assert client.get('/api/auth/me').status_code == 401
+        response = client.post('/api/auth/login', json=payload)
+        assert response.status_code == 200, response.text
+        assert response.json()['id'] == user['id']
+        assert client.cookies.get('cortia_session') != old_token
+        assert client.get('/api/auth/me').json()['id'] == user['id']
+
+
+def test_login_unknown_username_does_not_create_account(client):
+    assert client.post('/api/auth/login', json={'username': 'unknown'}).status_code == 401
+    assert client.get('/api/auth/me').status_code == 401
+
+
 def test_password_and_origin_validation(client):
     assert client.post('/api/auth/register', json={'username':'a','password':'x'}).status_code == 422
     signup(client)

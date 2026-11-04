@@ -1,0 +1,20 @@
+.baseline-summary { display: grid; gap: 18px; }
+.baseline-explanation { padding: 18px; background: #f8f5f2; border: 1px solid #e9e1da; border-radius: 9px; }
+.baseline-explanation h3 { font-size: 16px; color: #292420; margin-bottom: 10px; }
+.baseline-explanation p, .baseline-ratio { font-size: 13px; line-height: 1.75; color: #514943; }
+.baseline-explanation p + p { margin-top: 8px; }
+.baseline-band-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.baseline-band { padding: 16px; border: 1px solid #e8e1db; border-radius: 9px; }
+.baseline-band > div:first-child { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.baseline-band > div:first-child span { font-size: 10px; color: #655d57; }
+.baseline-percentage { display: block; font-size: 28px; font-weight: 600; color: #8d2e48; margin-top: 12px; }
+.baseline-band > span { font-size: 11px; color: #615851; }
+.baseline-band p { font-size: 12px; line-height: 1.65; color: #514943; margin: 12px 0; }
+.baseline-band small { display: block; font-size: 11px; line-height: 1.6; color: #655b53; }
+.baseline-power-track { height: 5px; border-radius: 3px; overflow: hidden; background: #eee7e1; margin-top: 12px; }
+.baseline-power-track > div { height: 100%; background: #aa6577; border-radius: inherit; }
+.baseline-technical { margin-top: 20px; padding-top: 14px; border-top: 1px solid #e8e1db; }
+.baseline-technical summary { cursor: pointer; color: #65534e; font-size: 12px; font-weight: 500; }
+.baseline-technical .table-scroll { margin-top: 12px; }
+@media (max-width: 1100px) { .baseline-band-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .baseline-band-grid { grid-template-columns: 1fr; } }

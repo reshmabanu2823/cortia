@@ -1,0 +1,104 @@
+.ref-overview-root .ref-hero-section {
+  min-height: 160px;
+  align-items: flex-start;
+}
+
+.ref-overview-root .ref-hero-title {
+  font-size: clamp(30px, 3vw, 40px);
+  font-weight: 600;
+  letter-spacing: -0.8px;
+}
+
+.ref-overview-root .ref-hero-right-actions {
+  padding-top: 12px;
+}
+
+.ref-overview-root .ref-card,
+.ref-overview-root .ref-metric-card {
+  border: 1px solid #e9e3de;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.ref-overview-root .ref-card-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.ref-overview-root .ref-new-recording-btn {
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.ref-overview-root .ref-metric-icon-wrap {
+  background: #f5f1ee;
+  border-radius: 8px;
+}
+
+.ref-overview-root .ref-metric-icon-wrap svg {
+  color: #8e5663;
+  stroke-width: 1.6;
+}
+
+.overview-signal-empty {
+  min-height: 114px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 7px;
+  color: #908780;
+  font-size: 12px;
+}
+
+.overview-signal-empty strong {
+  font-weight: 500;
+  color: #655c56;
+}
+
+.overview-scan-placeholder {
+  width: 116px;
+  height: 116px;
+  border: 1px solid #e7ded8;
+  background: #f8f5f2;
+  color: #aa888e;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.ref-overview-root .ref-mental-state-banner {
+  background: #f7f5f2;
+  border: 1px solid #e8e2db;
+  border-radius: 8px;
+}
+
+.ref-overview-root .ref-mental-state-text {
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 500;
+  color: #524a43;
+}
+
+.ref-overview-root .ref-lotus-icon-wrap {
+  background: #eae5df;
+}
+
+.ref-overview-root .icon-lotus {
+  color: #85756b;
+}
+
+.ref-overview-root .ref-prog-fill.coral,
+.ref-overview-root .color-dot.coral { background: #b96073; }
+.ref-overview-root .ref-prog-fill.blue,
+.ref-overview-root .color-dot.blue { background: #6d91b1; }
+.ref-overview-root .ref-prog-fill.purple,
+.ref-overview-root .color-dot.purple { background: #9180ac; }
+.ref-overview-root .ref-prog-fill.mint,
+.ref-overview-root .color-dot.mint { background: #719b85; }
+
+@media (max-width: 640px) {
+  .ref-overview-root .ref-hero-section { flex-wrap: wrap; gap: 16px; }
+  .ref-overview-root .ref-hero-right-actions { padding-top: 0; }
+}

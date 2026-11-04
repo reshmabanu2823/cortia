@@ -67,6 +67,8 @@ def create_app(settings=None):
     dist = ROOT/'frontend/dist'
     if dist.exists():
         app.mount('/assets',StaticFiles(directory=dist/'assets'),name='assets')
+        if (dist/'splash').exists():
+            app.mount('/splash',StaticFiles(directory=dist/'splash'),name='splash')
         cortia_dir = dist/'cortia'
         if cortia_dir.exists():
             app.mount('/cortia',StaticFiles(directory=cortia_dir),name='cortia')

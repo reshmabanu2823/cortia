@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 from ..models import User, Recording, Baseline, MRIUpload, MRIPrediction
 from ..analytics.baseline import compare
 from .charts import render_band_power_chart, render_history_trend_chart
+from .plain_eeg import explain_recording
+from ..services.eeg_states import signal_state
 
 CLASS_DISPLAY_NAMES = {
     "glioma_tumor": "Glioma",
@@ -77,11 +79,15 @@ def build_report_data(
     user: User,
     settings: Any,
     session_id: Optional[str] = None,
+    mri_id: Optional[str] = None,
+    report_type: str = "eeg",
 ) -> Dict[str, Any]:
     """Collects all real database records and builds a structured, un-fabricated report dictionary."""
 
     # 1. Focal Session Selection
-    if session_id:
+    if report_type == "mri":
+        focal_session = None
+    elif session_id:
         focal_session = db.query(Recording).filter_by(id=session_id, user_id=user.id).first()
         if not focal_session:
             raise ValueError(f"Recording session '{session_id}' not found for current user.")
@@ -94,7 +100,7 @@ def build_report_data(
         )
 
     # 2. Historical User Sessions
-    all_user_sessions = (
+    all_user_sessions = [] if report_type == "mri" else [focal_session] if session_id and focal_session else (
         db.query(Recording)
         .filter_by(user_id=user.id)
         .order_by(Recording.started_at.asc())
@@ -102,12 +108,15 @@ def build_report_data(
     )
 
     # 3. Latest Cranial MRI Record & Prediction
-    mri_upload = (
+    mri_query = (
         db.query(MRIUpload)
         .filter_by(user_id=user.id)
-        .order_by(MRIUpload.created_at.desc())
-        .first()
     )
+    if mri_id:
+        mri_query = mri_query.filter_by(id=mri_id)
+    mri_upload = mri_query.order_by(MRIUpload.created_at.desc()).first() if report_type == "mri" else None
+    if mri_id and mri_upload is None:
+        raise ValueError('MRI upload not found')
 
     mri_data: Dict[str, Any] = {
         "available": False,
@@ -196,8 +205,8 @@ def build_report_data(
         rel_gamma = float(features.get("relative_gamma", 0.0))
 
         # Ratios
-        theta_beta = round(rel_theta / rel_beta, 3) if rel_beta > 0.001 else None
-        alpha_theta = round(rel_alpha / rel_theta, 3) if rel_theta > 0.001 else None
+        theta_beta = features.get('theta_beta')
+        alpha_theta = features.get('alpha_theta')
 
         # Signal quality
         total_w = focal_session.valid_windows + focal_session.invalid_windows
@@ -209,11 +218,11 @@ def build_report_data(
         )
 
         quality_verdict = (
-            "Optimal Research Grade"
+            "Most sections were usable"
             if usable_pct >= 80 and missing_rate_pct < 0.5
-            else "Acceptable Signal"
+            else "Some sections had signal problems"
             if usable_pct >= 50
-            else "Suboptimal / High Artifact"
+            else "Many sections had signal problems"
         )
 
         bands_for_chart = {
@@ -221,7 +230,6 @@ def build_report_data(
             "theta": rel_theta,
             "alpha": rel_alpha,
             "beta": rel_beta,
-            "gamma": rel_gamma,
         }
         band_chart_bytes = render_band_power_chart(bands_for_chart)
 
@@ -242,11 +250,10 @@ def build_report_data(
             "quality_verdict": quality_verdict,
             "features": features,
             "bands": {
-                "Delta": {"rel": rel_delta, "range": "0.5 - 4.0 Hz", "role": "Restorative, deep sleep, or low arousal"},
-                "Theta": {"rel": rel_theta, "range": "4.0 - 8.0 Hz", "role": "Inward focus, drowsiness, or memory integration"},
-                "Alpha": {"rel": rel_alpha, "range": "8.0 - 13.0 Hz", "role": "Calm alertness, visual idling, posterior synchrony"},
-                "Beta": {"rel": rel_beta, "range": "13.0 - 30.0 Hz", "role": "Active cognition, executive attention, motor readiness"},
-                "Gamma": {"rel": rel_gamma, "range": "30.0 - 45.0 Hz", "role": "Fast multimodal information binding"},
+                "Delta": {"rel": rel_delta, "range": "0.5 - 4.0 Hz", "role": "The slowest waves measured in this recording"},
+                "Theta": {"rel": rel_theta, "range": "4.0 - 8.0 Hz", "role": "Slow waves, faster than delta"},
+                "Alpha": {"rel": rel_alpha, "range": "8.0 - 13.0 Hz", "role": "Waves between the slower and faster groups"},
+                "Beta": {"rel": rel_beta, "range": "13.0 - 29.5 Hz", "role": "The fastest waves measured by this analysis"},
             },
             "ratios": {
                 "Theta / Beta Ratio (TBR)": theta_beta,
@@ -385,7 +392,18 @@ def build_report_data(
         },
     ]
 
+    if report_type == "eeg":
+        key_observations = explain_recording(focal_session, eeg_data)
+        interpretations = [dict(metric=name, measurement=f'{band["rel"] * 100:.1f}%', interpretation=band['role']) for name, band in eeg_data['bands'].items()]
+    else:
+        key_observations = [text for text in key_observations if any(term in text for term in ("MRI", "Grad-CAM", "Cranial"))]
+        interpretations = [item for item in interpretations if any(term in item["metric"] for term in ("MRI", "Grad-CAM"))]
+
     return {
+        "report_type": report_type,
+        "signal_state": signal_state(session_data(focal_session)) if report_type == 'eeg' and focal_session else None,
+        "report_title": "EEG Signal Analysis Report" if report_type == "eeg" else "MRI Analysis Report",
+        "report_subtitle": "Your recording explained in simple words" if report_type == "eeg" else "Selected scan classification and model attention analysis",
         "report_id": report_id,
         "generation_timestamp": _format_iso_datetime(now_utc.isoformat()),
         "user": {
@@ -411,7 +429,7 @@ def build_report_data(
         "interpretations": interpretations,
         "disclaimer": (
             "CORTIA is an exploratory brain health research and neurotechnology monitoring workstation. "
-            "All metrics, spectral features, baseline comparisons, and deep learning MRI classifications "
+            "All analysis results "
             "are provided exclusively for scientific research, self-monitoring, and educational purposes. "
             "CORTIA is NOT a medical device, is not cleared by the FDA or CE regulatory bodies, and does NOT "
             "provide medical diagnoses, treatment decisions, or clinical prognostic determinations. "

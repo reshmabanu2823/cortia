@@ -3,6 +3,7 @@ import { Waves, ChevronRight } from "lucide-react";
 import type { Recording, Comparison, Analysis } from "../types";
 import { api, date, title, number } from "../api";
 import { Card, Empty, Badge, Note } from "../ui";
+import { ReportDownloads } from "../ReportDownloads";
 
 export function SessionRows({
   sessions,
@@ -144,6 +145,7 @@ export function SessionEvidence({
     <>
       <Card
         title="Recorded analysis windows"
+        action={<ReportDownloads kind="sessions" id={session.id} />}
         subtitle="Select a window to inspect its spectrum. Raw offsets remain traceable."
       >
         {error ? (

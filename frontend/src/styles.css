@@ -13,7 +13,7 @@
   --cortia-green: #3F775B;
   --green: #C94040;
   --ink: #202124;
-  --muted: #78716C;
+  --muted: #5f5955;
   --line: #E5E4DC;
   --paper: #FFFFFF;
   --serif: Georgia, "Times New Roman", serif;
@@ -4828,13 +4828,7 @@ td small {
   height: 170px;
   object-fit: contain;
   filter: drop-shadow(0 12px 28px rgba(226, 103, 127, 0.28));
-  animation: floatBrain 6s ease-in-out infinite alternate;
   z-index: 2;
-}
-
-@keyframes floatBrain {
-  0% { transform: translateY(0px) rotate(0deg); }
-  100% { transform: translateY(-8px) rotate(1.5deg); }
 }
 
 .art-orbit-ring {
@@ -5501,3 +5495,20 @@ td small {
   color: #24201D;
   font-weight: 700;
 }
+
+/* Improve secondary text contrast without changing the surface palette. */
+.muted, .fine-print, .card-head p, .page-heading p, .stat-label,
+.stat p, .empty p, .signal-empty p, .checkbox-row small,
+.session-rows div > span, td small, .breadcrumb, .breadcrumb strong,
+.local-label, .topbar-right, .page-footer, .ref-metric-label,
+.ref-hero-eyebrow, .ref-hero-sub, .ref-mri-scan-sub, .ref-step-node span {
+  color: #5d5853;
+}
+
+.eyebrow, .nav-section-label, .workspace-label,
+.sidebar nav button:not(.active), .icon-button {
+  color: #605a55;
+}
+
+th { color: #514b46; }
+input::placeholder, textarea::placeholder { color: #716a64; opacity: 1; }
